@@ -1,0 +1,1 @@
+# maps diseases to MAnchester triangle colors to assign urgency to one's medical complication. Example "Heart Attack" -> Red "Fracture" -> Yellow "Common Cold" -> Blue and routthe user to the according medical institution that is best fit

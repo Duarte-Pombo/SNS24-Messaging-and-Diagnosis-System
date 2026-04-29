@@ -1,0 +1,1 @@
+# The saved, pre-trained model from data/symptoms_data to match the symptoms to a possible cause
