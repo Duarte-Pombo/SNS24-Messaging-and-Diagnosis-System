@@ -40,32 +40,25 @@ auto-triage/
 
 ## Installation & Setup
 
-1. **Clone the repository:**
-
-```bash
-git clone https://github.com/your-username/auto-triage.git
-cd auto-triage
-```
-
-2. **Install core dependencies:** It is recommended to run this project within a virtual environment.
+1. **Install core dependencies:** It is recommended to run this project within a virtual environment.
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Download the Portuguese NLP Model:** The `spaCy` library requires the specific Portuguese language pack for accurate tokenization.
+2. **Download the Portuguese NLP Model:** The `spaCy` library requires the specific Portuguese language pack for accurate tokenization.
 
 ```bash
 python -m spacy download pt_core_news_sm
 ```
 
-4. **Train the Initial Model:** Before running the application, you must generate the serialized machine learning model. This script reads the synthetic dataset and exports the `.pkl` file to the models directory.
+3. **Train the Initial Model:** Before running the application, you must generate the serialized machine learning model. This script reads the synthetic dataset and exports the `.pkl` file to the models directory.
 
 ```bash
 python src/ml_trainer.py
 ```
 
-5. **Launch the Application:** Initialize the Streamlit server to interact with the frontend.
+4. **Launch the Application:** Initialize the Streamlit server to interact with the frontend.
 
 ```bash
 streamlit run app.py
