@@ -53,7 +53,7 @@ def train_model(X_train, y_train):
     return clf
 
 
-def evaluate_model(clf, le, X_test, y_test):
+def evaluate(clf, le, X_test, y_test):
     y_pred = clf.predict(X_test)
     print(classification_report(y_test, y_pred, target_names=le.classes_))
 
@@ -85,3 +85,76 @@ def predict_top3(feature_vector):
     top3_idx = proba.argsort()[-3:][::-1]
 
     return [(le.classes_[i], proba[i] * 100, 1) for i in top3_idx]
+
+
+FEATURE_LABELS_PT = {
+    "age_group":            "grupo etário",
+    "gender":               "género",
+    "duration":             "duração dos sintomas",
+    "pain_intensity":       "intensidade da dor",
+    "dor_no_peito":         "dor no peito",
+    "irradiacao_braco":     "irradiação para o braço",
+    "palpitacoes":          "palpitações",
+    "suores_frios":         "suores frios",
+    "falta_de_ar":          "falta de ar",
+    "pieira":               "pieira",
+    "tosse":                "tosse",
+    "expectoracao":         "expectoração",
+    "dor_ao_respirar":      "dor ao respirar",
+    "febre":                "febre",
+    "calafrios":            "calafrios",
+    "fadiga":               "fadiga",
+    "cefaleia_subita":      "cefaleia súbita",
+    "confusao_mental":      "confusão mental",
+    "visao_turva":          "visão turva",
+    "fraqueza_facial":      "fraqueza facial",
+    "dificuldade_falar":    "dificuldade em falar",
+    "cefaleia_pulsatil":    "cefaleia pulsátil",
+    "nausea":               "náusea",
+    "sensibilidade_luz":    "sensibilidade à luz",
+    "vomito":               "vómito",
+    "diarreia":             "diarreia",
+    "dor_abdominal_difusa": "dor abdominal difusa",
+    "dor_abdominal_qid":    "dor no quadrante inferior direito",
+    "rigidez_abdominal":    "rigidez abdominal",
+    "perda_apetite":        "perda de apetite",
+    "espirros":             "espirros",
+    "dor_de_garganta":      "dor de garganta",
+    "dor_localizada":       "dor localizada",
+    "inchaço":              "inchaço",
+    "ardor_ao_urinar":      "ardor ao urinar",
+    "frequencia_urinaria":  "frequência urinária",
+}
+
+def explain(feature_vector, top_n=3):
+    clf, _  = load_model()
+
+    row = {f: 0 for f in EXPECTED_FEATURES}
+    row.update(feature_vector)
+
+    active = [f for f in EXPECTED_FEATURES if row[f] != 0]
+    importances = clf.feature_importances_
+
+    ranked = sorted(active, key=lambda f: importances[EXPECTED_FEATURES.index(f)], reverse=True)
+    top = ranked[:top_n]
+
+    return [FEATURE_LABELS_PT[f] for f in top]
+
+if __name__ == "__main__":
+    print("Loading data...")
+    X, y = load_data()
+
+    print("Encoding labels...")
+    y_encoded, le = encode_labels(y)
+
+    print("Splitting data...")
+    X_train, X_test, y_train, y_test = split_data(X, y_encoded)
+
+    print("Training model...")
+    clf = train_model(X_train, y_train)
+
+    print("Evaluating...")
+    evaluate(clf, le, X_test, y_test)
+
+    print("Saving model...")
+    save_model(clf, le)
