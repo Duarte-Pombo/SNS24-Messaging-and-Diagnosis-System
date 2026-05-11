@@ -51,3 +51,14 @@ def train_model(X_train, y_train):
         )
     clf.fit(X_train, y_train)
     return clf
+
+
+def evaluate_model(clf, le, X_test, y_test):
+    y_pred = clf.predict(X_test)
+    print(classification_report(y_test, y_pred, target_names=le.classes_))
+
+    importances = clf.feature_importances_
+    age_imp = importances[EXPECTED_FEATURES.index("age_group")]
+    print(f"Feature importance for 'age_group': {age_imp*100:.1f}%")
+    if age_imp > 0.40:
+        print("WARNING: 'age_group' importance exceeds 40% — consider widening age distributions and regenerating the dataset.")
