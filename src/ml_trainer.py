@@ -39,3 +39,5 @@ def encode_labels(y):
     le = LabelEncoder()
     return le.fit_transform(y), le
 
+def split_data(X, y_encoded):
+    return train_test_split(X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded)
