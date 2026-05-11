@@ -41,3 +41,13 @@ def encode_labels(y):
 
 def split_data(X, y_encoded):
     return train_test_split(X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded)
+
+def train_model(X_train, y_train):
+    clf = RandomForestClassifier(
+        n_estimators=200, # decision trees
+        min_samples_leaf=2,
+        random_state=42, 
+        n_jobs=-1 # use all CPU cores for training
+        )
+    clf.fit(X_train, y_train)
+    return clf
