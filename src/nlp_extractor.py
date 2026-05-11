@@ -54,7 +54,7 @@ def _bootstrap_default_symptoms() -> list[str]:
     # Minimal fallback so the module works without the CSV.
     return [
         "febre", "calafrios", "tosse", "falta de ar", "dor de garganta",
-        "dor no peito", "fadiga", "náusea", "vômito", "diarreia",
+        "dor de cabeça", "dor no peito", "fadiga", "náusea", "vômito", "diarreia",
         "dor abdominal", "espirros", "cefaleia", "tontura", "inchaço",
         "palpitações", "suores frios", "dificuldade falar", "visão turva",
         "confusão mental", "fraqueza facial", "rigidez abdominal",
@@ -86,6 +86,126 @@ def _strip_accents(text: str) -> str:
     return "".join(ch for ch in nfkd if not unicodedata.combining(ch))
 
 
+# ---------------------------------------------------------------------------
+# Plural generation
+# ---------------------------------------------------------------------------
+
+def _pt_plurals(phrase: str) -> list[str]:
+    """
+    Return a list of likely Portuguese plural surface forms for *phrase*.
+    """
+    words = phrase.split()
+    last = words[-1].lower()
+    prefix = " ".join(words[:-1])  # everything before the last word
+
+    candidates: list[str] = []
+
+    def make(new_last: str) -> str:
+        return (prefix + " " + new_last).strip()
+
+    if last.endswith("ão"):
+        stem = last[:-2]
+        candidates += [make(stem + s) for s in ("ões", "ães", "ãos")]
+    elif last.endswith("al"):
+        candidates.append(make(last[:-2] + "ais"))
+    elif last.endswith("el"):
+        candidates.append(make(last[:-2] + "eis"))
+    elif last.endswith("ol"):
+        candidates.append(make(last[:-2] + "óis"))
+    elif last.endswith("ul"):
+        candidates.append(make(last[:-2] + "uis"))
+    elif last.endswith("il"):
+        candidates.append(make(last[:-2] + "is"))
+    elif last.endswith("m"):
+        candidates.append(make(last[:-1] + "ns"))
+    elif last.endswith(("r", "z", "n")):
+        candidates.append(make(last + "es"))
+    elif last.endswith("s"):
+        pass  # already plural / invariant
+    else:
+        candidates.append(make(last + "s"))
+
+    return [c for c in candidates if c != phrase]
+
+
+# ---------------------------------------------------------------------------
+# Synonym map  
+# ---------------------------------------------------------------------------
+
+SYNONYM_MAP: dict[str, str] = {
+    # ── Fatigue ──────────────────────────────────────────────────────────────
+    "cansado":              "fadiga",
+    "cansada":              "fadiga",
+    "cansaço":              "fadiga",
+    "cansaco":              "fadiga",
+    "esgotado":             "fadiga",
+    "esgotada":             "fadiga",
+    "esgotamento":          "fadiga",
+    "exausto":              "fadiga",
+    "exausta":              "fadiga",
+    "exaustão":             "fadiga",
+    "sem energia":          "fadiga",
+    "sem forças":           "fadiga",
+    # ── Headache ─────────────────────────────────────────────────────────────
+    "dores de cabeça":      "cefaleia",  # also caught by plural gen
+    "dor de cabeça":        "cefaleia",
+    "enxaqueca":            "cefaleia",
+    "migrânea":             "cefaleia",
+    "migranea":             "cefaleia",
+    # ── Chest pain ───────────────────────────────────────────────────────────
+    "dores no peito":       "dor no peito",
+    "aperto no peito":      "dor no peito",
+    "pressão no peito":     "dor no peito",
+    "pressao no peito":     "dor no peito",
+    # ── Nausea ───────────────────────────────────────────────────────────────
+    "enjoado":              "náusea",
+    "enjoada":              "náusea",
+    "enjoo":                "náusea",
+    "enjôo":                "náusea",
+    "mal estar":            "náusea",
+    # ── Fever ────────────────────────────────────────────────────────────────
+    "temperatura":          "febre",
+    "febril":               "febre",
+    "estado febril":        "febre",
+    # ── Cough ────────────────────────────────────────────────────────────────
+    "tossindo":             "tosse",
+    "tussia":               "tosse",
+    # ── Dizziness ────────────────────────────────────────────────────────────
+    "tonto":                "tontura",
+    "tonta":                "tontura",
+    "vertigem":             "tontura",
+    "zonzo":                "tontura",
+    "zonza":                "tontura",
+    # ── Shortness of breath ──────────────────────────────────────────────────
+    "sem fôlego":           "falta de ar",
+    "sem folego":           "falta de ar",
+    "ofegante":             "falta de ar",
+    "respiração difícil":   "falta de ar",
+    "respiracao dificil":   "falta de ar",
+    # ── Abdominal pain ───────────────────────────────────────────────────────
+    "dores abdominais":     "dor abdominal",
+    "dor de barriga":       "dor abdominal",
+    "barriga doendo":       "dor abdominal",
+    "cólica":               "dor abdominal",
+    "colica":               "dor abdominal",
+    # ── Throat ───────────────────────────────────────────────────────────────
+    "dores de garganta":    "dor de garganta",
+    "garganta inflamada":   "dor de garganta",
+    "garganta irritada":    "dor de garganta",
+    # ── Swelling ─────────────────────────────────────────────────────────────
+    "inchado":              "inchaço",
+    "inchada":              "inchaço",
+    "edema":                "inchaço",
+    # ── Palpitations ─────────────────────────────────────────────────────────
+    "coração acelerado":    "palpitações",
+    "coração disparado":    "palpitações",
+    "taquicardia":          "palpitações",
+    # ── Fever / chills ───────────────────────────────────────────────────────
+    "arrepios":             "calafrios",
+    "tremores":             "calafrios",
+}
+
+
 def build_matcher(
     nlp: spacy.language.Language,
     symptoms: Sequence[str],
@@ -94,31 +214,66 @@ def build_matcher(
     accent_insensitive: bool = True,
 ) -> tuple[PhraseMatcher, dict[str, str]]:
     """
-    Compile a PhraseMatcher from *symptoms* and return it together with
-    a mapping from the normalised match key back to the original phrase.
+    Compile a PhraseMatcher from *symptoms* (plus their plural variants and
+    synonyms) and return it together with a mapping from each match key back
+    to the canonical symptom phrase.
+
+    Every surface form — original, plural, synonym, accent-stripped — is
+    registered under the **same key** so ``extract_symptoms`` always returns
+    the canonical name from the vocabulary.
     """
     attr = "LOWER" if case_insensitive else "TEXT"
     matcher = PhraseMatcher(nlp.vocab, attr=attr)
     key_to_phrase: dict[str, str] = {}
 
+    def _register(key: str, canonical: str, surface_forms: list[str]) -> None:
+        """Add *surface_forms* to the matcher under *key* → *canonical*."""
+        key_to_phrase[key] = canonical
+        all_forms: list[str] = []
+        for form in surface_forms:
+            all_forms.append(form)
+            if accent_insensitive:
+                stripped = _strip_accents(form)
+                if stripped != form:
+                    all_forms.append(stripped)
+        patterns = [nlp.make_doc(f) for f in dict.fromkeys(all_forms)]  # dedup, keep order
+        if key in matcher:
+            matcher.add(key, patterns)
+        else:
+            matcher.add(key, patterns)
+
+    # 1. Register every canonical symptom + its auto-generated plural forms.
     for phrase in symptoms:
-        normalised = _strip_accents(phrase.lower()) if accent_insensitive else phrase
-        key = normalised.replace(" ", "_")  # spaCy rule keys cannot contain spaces
-        key_to_phrase[key] = phrase
+        normalised = _strip_accents(phrase.lower()) if accent_insensitive else phrase.lower()
+        key = normalised.replace(" ", "_")
+        forms = [phrase] + _pt_plurals(phrase)
+        _register(key, phrase, forms)
 
-        # Build both the original and accent-stripped patterns so the matcher
-        # catches typed text regardless of whether the user used diacritics.
-        patterns = [phrase]
-        if accent_insensitive and normalised != phrase.lower():
-            patterns.append(_strip_accents(phrase))
-
-        for pattern_text in patterns:
-            doc_pattern = nlp.make_doc(pattern_text)
-            # add_patterns accepts duplicates; guard to avoid spaCy warnings.
-            if key not in matcher:
-                matcher.add(key, [doc_pattern])
-            else:
-                matcher.add(key, [doc_pattern])  # spaCy merges lists automatically
+    # 2. Register synonym surface forms, pointing at their canonical symptom.
+    for synonym, canonical in SYNONYM_MAP.items():
+        # Find the key of the canonical symptom (it must exist in step 1).
+        canon_key = _strip_accents(canonical.lower()).replace(" ", "_")
+        if canon_key not in key_to_phrase:
+            import warnings
+            warnings.warn(
+                f"SYNONYM_MAP: canonical '{canonical}' (for synonym '{synonym}') "
+                f"is not in the active vocabulary — entry ignored. "
+                f"Add '{canonical}' to the symptom list or fix the mapping.",
+                stacklevel=2,
+            )
+            continue
+        # Synonyms also get plural variants.
+        forms = [synonym] + _pt_plurals(synonym)
+        # Add to the existing canonical key (don't create a duplicate key).
+        all_forms: list[str] = []
+        for form in forms:
+            all_forms.append(form)
+            if accent_insensitive:
+                stripped = _strip_accents(form)
+                if stripped != form:
+                    all_forms.append(stripped)
+        patterns = [nlp.make_doc(f) for f in dict.fromkeys(all_forms)]
+        matcher.add(canon_key, patterns)
 
     return matcher, key_to_phrase
 
@@ -205,9 +360,13 @@ def _run_test_mode() -> None:
     # Warm up the pipeline once so the first query feels instant.
     _get_pipeline()
 
-    print(f"\nActive vocabulary ({len(DEFAULT_SYMPTOMS)} symptoms):")
+    print(f"\nActive vocabulary ({len(DEFAULT_SYMPTOMS)} symptoms, "
+          f"{len(SYNONYM_MAP)} synonyms):")
     for s in DEFAULT_SYMPTOMS:
         print(f"  • {s}")
+    print(f"\nSynonym map ({len(SYNONYM_MAP)} entries):")
+    for alt, canon in SYNONYM_MAP.items():
+        print(f"  • {alt!r:30s} → {canon!r}")
 
     while True:
         try:
