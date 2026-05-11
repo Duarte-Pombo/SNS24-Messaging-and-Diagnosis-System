@@ -1,1 +1,102 @@
-# The data containing hospitals, coordinates and their area of expertise if they have one
+Hospital Name,Coordinates,Specialty Tags,Care Type
+Centro Hospitalar do Baixo Vouga - Aveiro,"40.634435, -8.6729264",Hospital,Hospital
+Hospital Infante D. Pedro,"40.634435, -8.6729264",Hospital,Hospital
+Hospital da Luz Aveiro,"40.6375999, -8.6544008",Hospital privado,Hospital
+Hospital da Luz de Aveiro - Consultas e Exames,"40.6375999, -8.6544008",Hospital privado,Hospital
+Serviço de Urgência do Centro Hospitalar do Baixo Vouga,"40.6335286, -8.6732637",Urgências,Hospital
+AniCura Aveiro Hospital Veterinário,"40.6335286, -8.6732637",Hospital veterinário,Hospital
+ACES Baixo Vouga,"40.6335286, -8.6732637",Hospital,Hospital
+CCA - Centro Clínico de Aveiro,"40.6267804, -8.6856866",Clínica Médica,Clinic
+CMM Aveiro | Clínica Médica em Aveiro | Ortopedia | Fisiatria | Fisioterapia,"40.6267804, -8.6856866",Clínica Médica,Clinic
+Ser e Crescer - Serviços Clínicos,"40.6267804, -8.6856866",Clínica Médica,Clinic
+Clínica São Bernardo,"40.6179883, -8.6611042",Clínica Médica,Clinic
+The Clinique,"40.63984, -8.6903139",Clínica Médica,Clinic
+Médico no Bairro,"40.6463419, -8.6702919",Médico de família,Clinic
+Marme Clinic - Clínica de Medicina Estética,"40.6463419, -8.6702919",Clínica especializada,Clinic
+CMEF - CLÍNICA MÉDICA E FISIOTERAPIA,"40.6417835, -8.6880662",Clínica Médica,Clinic
+CliVida - Clínica Médica em Aveiro,"40.6417835, -8.6880662",Clínica Médica,Clinic
+Centro Clínico Preveris Aveiro,"40.6417835, -8.6880662",Clínica Médica,Clinic
+"Centro Clinico Sá Barrocas, Lda","40.6417835, -8.6880662",Clínica Médica,Clinic
+Upcare Medical Center,"40.6417835, -8.6880662",Clínica dentária,Clinic
+Move Mais - Clínica Médica e de Reabilitação,"40.6417835, -8.6880662",Clínica Médica,Clinic
+Global Medic,"40.6417835, -8.6880662",Clínica Médica,Clinic
+CLISO Clinica Medicina Trabalho,"40.6417835, -8.6880662",Clínica Médica,Clinic
+"AROM- clinica medica e medicina dentaria,Lda","40.6417835, -8.6880662",Clínica especializada,Clinic
+Dias Ferraz Clinic - Medicina Estética,"40.6417835, -8.6880662",Clínica Médica,Clinic
+Clínica Dr. Ergo,"40.6417835, -8.6880662",Clínica especializada,Clinic
+"Ritomedica-Clinica Medica, Lda.","40.6417835, -8.6880662",Clínica Médica,Clinic
+Clínica dentária Smile.up | Aveiro,"40.6417835, -8.6880662",Clínica dentária,Clinic
+CLIP NATAL - Clínica Pediátrica e de Medicina Integrativa de Aveiro,"40.6417835, -8.6880662",Clínica Médica,Clinic
+CCES Aveiro | Medicina Dentária,"40.6417835, -8.6880662",Clínica dentária,Clinic
+MediCapilar Aveiro - Transplantes Capilares Avançados,"40.6417835, -8.6880662",Clínica de transplante capilar,Clinic
+Clínica d’avenida - Dra. Constança Monteiro,"40.6417835, -8.6880662",Dentista,Clinic
+Medusa - Consultórios Médicos Lda,"40.6417835, -8.6880662",Ginecologista-Obstetra,Clinic
+Hospital Lusíadas Albufeira,"37.103016, -12.8476228",Hospital privado,Maternity
+Clínica Dr. Gustavo Vinagre - Cirurgia do Joelho e Medicina Desportiva,"41.1608, -8.6630489",Clínica Médica,Hospital
+"Centro Hospitalar Universitário de Santo António, EPE","41.1608, -8.6630489",Hospital público,Hospital
+Hospital Universitário de São João,"41.1815372, -8.6370518",Hospital geral,Hospital
+Centro Hospitalar Universitário de Santo António: Consultas Externas,"41.1474641, -8.6585091",Hospital universitário,Hospital
+Hospital CUF Porto,"41.1762148, -8.7052456",Hospital privado,Hospital
+Hospital de Santa Maria - Porto,"41.1600076, -8.6456285",Hospital privado,Hospital
+Hospital Veterinário da Universidade do Porto - UPVet,"41.1600076, -8.6456285",Hospital veterinário,Hospital
+Centro Hospitalar de Porto,"41.1526033, -8.6666917",Hospital,Hospital
+Dr. Rui A. Silva (IPO- Porto),"41.15162, -13.2240358",Gastroenterologista,Hospital
+Hospital Lusíadas Porto,"41.15162, -13.2240358",Hospital privado,Hospital
+Hospital CUF Trindade - Porto,"41.15162, -13.2240358",Hospital privado,Hospital
+Hospital de São Francisco do Porto,"41.15162, -13.2240358",Hospital,Hospital
+Hospital da Lapa,"41.15162, -13.2240358",Hospital privado,Hospital
+Hospital da Prelada,"41.15162, -13.2240358",Hospital,Hospital
+Unidade de Saúde Familiar Porto Centro,"41.1514479, -8.672405",Centro de saúde comunitário,Health Center
+Centro de Saúde,"41.1514479, -8.672405",Centro médico público,Health Center
+Unidade de Saúde Familiar (USF) São João do Porto,"41.1514479, -8.672405",Centro de saúde comunitário,Health Center
+Centro de Saude,"41.1514479, -8.672405",Centro de saúde comunitário,Health Center
+USF Azevedo Campanhã - Polo S. Roque,"41.1514479, -8.672405",Centro médico público,Health Center
+Centro de Saúde do Bonfim,"41.1514479, -8.672405",Centro médico público,Health Center
+USF do Covelo,"41.1514479, -8.672405",Centro médico público,Health Center
+USF Cedofeita - Unidade de Saúde Familiar,"41.1514479, -8.672405",Centro de saúde comunitário,Health Center
+USF Garcia de Orta - Unidade de Saúde Familiar,"41.1615491, -8.73955",Centro de saúde comunitário,Health Center
+USF Arca d'Água,"41.1695519, -8.6844288",Centro médico público,Health Center
+USF Bom Porto - Unidade de Saúde Familiar,"41.1695519, -8.6844288",Centro de saúde comunitário,Health Center
+USF Ramalde - Unidade de Saúde Familiar,"41.1703032, -8.7251259",Centro de saúde comunitário,Health Center
+USF Carvalhido - Unidade de Saúde Familiar,"41.1703032, -8.7251259",Centro de saúde comunitário,Health Center
+USP - Unidade de Saúde Pública Porto Ocidental,"41.1430285, -8.6807738",Centro de saúde comunitário,Health Center
+UCSP Carvalhosa - Unidade de Cuidados de Saúde Personalizados,"41.1430285, -8.6807738",Centro médico público,Health Center
+Centro de Vacinação Internacional,"41.1430285, -8.6807738",Centro de saúde comunitário,Health Center
+Atendimento Complementar Porto Ocidental,"41.1430285, -8.6807738",Centro de saúde comunitário,Health Center
+USF Aníbal Cunha - Unidade de Saúde Familiar,"41.1430285, -8.6807738",Centro de saúde comunitário,Health Center
+Unidade de Saúde Familiar Novo Sentido,"41.1630871, -8.6417629",Centro médico público,Health Center
+Centro de Saúde da Batalha,"41.1430534, -8.681629",Centro médico público,Health Center
+USF Serpa Pinto - Unidade de Saúde Familiar,"41.1430534, -8.681629",Centro de saúde comunitário,Health Center
+USF Homem do Leme - Unidade de Saúde Familiar,"41.1602302, -8.7538651",Centro de saúde comunitário,Health Center
+Atendimento Complementar Porto Oriental,"41.1654585, -8.6786534",Centro de saúde comunitário,Health Center
+USF Prelada - Unidade de Saúde Familiar,"41.1654585, -8.6786534",Centro de saúde comunitário,Health Center
+Clínica Médica do Porto,"41.15162, -13.2240358",Clínica Médica,Clinic
+Centro Clínico Preveris Porto,"41.15162, -13.2240358",Clínica Médica,Clinic
+Clínica Médica da Foz,"41.15162, -13.2240358",Clínica Médica,Clinic
+"Porto Clínica - Xavier, Mansilha & Macedo - Clínica Médica, Lda","41.15162, -13.2240358",Clínica Médica,Clinic
+GPMEDICOS - Gagliardini & Patricio Lda,"41.15162, -13.2240358",Clínica Médica,Clinic
+Clínica Jardim Botânico,"41.15162, -13.2240358",Clínica Médica,Clinic
+Clínica Médica Jardim Porto - Implantologia | Ortodontia | Medicina Dentária,"41.15162, -13.2240358",Clínica dentária,Clinic
+Hospital Santo António dos Capuchos,"38.7223938, -9.2137092",Hospital,Hospital
+Hospital de São José,"38.7223938, -9.2137092",Hospital geral,Hospital
+Hospital de Santa Maria,"38.7223938, -9.2137092",Hospital universitário,Hospital
+Hospital de São Francisco Xavier,"38.7070841, -9.2903713",Hospital público,Hospital
+Hospital de Santa Marta,"38.7235607, -9.217659",Hospital,Hospital
+Hospital Egas Moniz,"38.6996879, -9.2604343",Hospital,Hospital
+Urgências Centrais Hospital de Santa Maria,"38.7485369, -9.2334734",Hospital,Hospital
+Hospital / Parque de Saúde Pulido Valente,"38.7485369, -9.2334734",Hospital,Hospital
+DOCTA Clínica Médica,"38.762519, -10.3312135",Clínica Médica,Clinic
+Dra Sofia Carvalho Cirurgia Plástica,"38.762519, -10.3312135",Cirurgião plástico,Clinic
+CPO - Clínica Privada de Oftalmologia,"38.762519, -10.3312135",Oftalmologista,Clinic
+Hospital Lusíadas Lisboa,"38.762519, -10.3312135",Hospital privado,Clinic
+Clínica Dos Arcos,"38.762519, -10.3312135",Clínica Médica,Clinic
+CMIL - Clínica Médica Internacional de Lisboa,"38.762519, -10.3312135",Clínica Médica,Clinic
+Alegria Medical Centre,"38.7194151, -10.2977727",Hospital Universitário,Clinic
+Dr. Pedro Stapleton-Garcia | Otorrino Lisboa,"38.733647, -9.2188088",Otorrinolaringologista,Health Center
+Centro de Saúde Alameda,"38.733647, -9.2188088",Centro de saúde comunitário,Health Center
+Centro de Saúde de Sete Rios,"38.733647, -9.2188088",Centro de saúde comunitário,Health Center
+Centro de Saúde de São Mamede-Santa Isabel,"38.733647, -9.2188088",Centro médico público,Health Center
+USF da Baixa,"38.733647, -9.2188088",Centro de saúde comunitário,Health Center
+USF das Conchas,"38.733647, -9.2188088",Centro de saúde comunitário,Health Center
+Centro de Saude dos Olivais,"38.733647, -9.2188088",Centro de saúde comunitário,Health Center
+Centro de Saúde da Ajuda,"38.7032716, -9.266492",Centro médico público,Health Center
