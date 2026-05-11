@@ -186,3 +186,49 @@ def extract_symptoms(
             found.append(original)
 
     return found
+
+
+# ---------------------------------------------------------------------------
+# CLI — python nlp_extractor.py --test
+# ---------------------------------------------------------------------------
+
+def _run_test_mode() -> None:
+    """Interactive test loop: type a sentence, see the matched symptoms."""
+    import json
+
+    print("=" * 60)
+    print("  NLP Symptom Extractor — interactive test mode")
+    print("  Type a Portuguese sentence and press Enter.")
+    print("  Leave the line empty and press Enter to quit.")
+    print("=" * 60)
+
+    # Warm up the pipeline once so the first query feels instant.
+    _get_pipeline()
+
+    print(f"\nActive vocabulary ({len(DEFAULT_SYMPTOMS)} symptoms):")
+    for s in DEFAULT_SYMPTOMS:
+        print(f"  • {s}")
+
+    while True:
+        try:
+            text = input("\nInput : ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nGoodbye.")
+            break
+
+        if not text:
+            print("Goodbye.")
+            break
+
+        result = extract_symptoms(text)
+        print(f"Output: {json.dumps(result, ensure_ascii=False)}")
+
+
+if __name__ == "__main__":
+    import sys
+
+    if "--test" in sys.argv or "-test" in sys.argv:
+        _run_test_mode()
+    else:
+        print("Usage: python nlp_extractor.py --test")
+        sys.exit(1)
