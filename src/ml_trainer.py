@@ -62,3 +62,26 @@ def evaluate_model(clf, le, X_test, y_test):
     print(f"Feature importance for 'age_group': {age_imp*100:.1f}%")
     if age_imp > 0.40:
         print("WARNING: 'age_group' importance exceeds 40% — consider widening age distributions and regenerating the dataset.")
+
+def save_model(clf, le):
+    os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
+    joblib.dump({"model": clf, "label_encoder": le}, MODEL_PATH)
+    print(f"Model saved to {MODEL_PATH}")
+
+def load_model():
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(f"Model file not found: {MODEL_PATH}")
+    data = joblib.load(MODEL_PATH)
+    return data["model"], data["label_encoder"]
+
+def predict_top3(feature_vector):
+    clf, le = load_model()
+    
+    row = {f: 0 for f in EXPECTED_FEATURES}
+    row.update(feature_vector)
+    X = pd.DataFrame([row])[EXPECTED_FEATURES]
+
+    proba = clf.predict_proba(X)[0]
+    top3_idx = proba.argsort()[-3:][::-1]
+
+    return [(le.classes_[i], proba[i] * 100, 1) for i in top3_idx]
