@@ -34,3 +34,8 @@ def load_data():
         raise ValueError(f"CSV is missing expected columns: {missing}")
 
     return df[EXPECTED_FEATURES], df[TARGET]
+
+def encode_labels(y):
+    le = LabelEncoder()
+    return le.fit_transform(y), le
+
