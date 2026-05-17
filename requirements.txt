@@ -3,3 +3,5 @@ numpy
 scikit-learn
 spacy
 streamlit
+streamlit-js-eval
+joblib
