@@ -82,9 +82,9 @@ def _bootstrap_default_symptoms() -> list[str]:
         "taquicardia", "bradicardia", "hipertensão", "hipotensão",
         # ── Gastrointestinal ─────────────────────────────────────────────────
         "náusea", "vômito", "diarreia", "constipação", "obstipação",
-        "dor abdominal", "dor abdominal difusa", "rigidez abdominal",
-        "distensão abdominal", "pirose", "regurgitação",
-        "flatulência", "melena", "hematêmese",
+        "dor abdominal", "dor abdominal difusa", "dor abdominal qid",
+        "rigidez abdominal", "distensão abdominal", "pirose",
+        "regurgitação", "flatulência", "melena", "hematêmese",
         # ── Urinary ──────────────────────────────────────────────────────────
         "ardor ao urinar", "disúria", "frequência urinária",
         "poliúria", "oligúria", "hematúria",
@@ -414,6 +414,14 @@ SYNONYM_MAP: dict[str, str] = {
     "refluxo":                  "dor abdominal difusa",
     "acidez":                   "dor abdominal difusa",
     "queimação de estômago":    "dor abdominal difusa",
+
+    # Localizada
+    "dor no lado direito da barriga":  "dor abdominal qid",
+    "dor no lado direito":             "dor abdominal qid",
+    "dor no fundo da barriga":         "dor abdominal qid",
+    "dor pé da barriga direito":       "dor abdominal qid",
+    "dor no apêndice":                 "dor abdominal qid",
+    "pontada no lado direito":         "dor abdominal qid",
 
     # ── Swallowing / Throat ──────────────────────────────────────────────────
     "dificuldade engolir":      "dor de garganta",

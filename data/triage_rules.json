@@ -1,13 +1,13 @@
 {
-  "Constipação": {"color": "TODO", "level": 1},
-  "Enfarte do Miocárdio": {"color": "TODO", "level": 5},
-  "Enxaqueca": {"color": "TODO", "level": 1},
-  "Infeção Urinária": {"color": "TODO", "level": 3},
-  "Pneumonia": {"color": "TODO", "level": 5},
-  "Fratura Óssea": {"color": "TODO", "level": 4},
-  "Gripe": {"color": "TODO", "level": 2},
-  "Gastroenterite": {"color": "TODO", "level": 3},
-  "Apendicite": {"color": "TODO", "level": 5},
-  "Asma (crise)": {"color": "TODO", "level": 5},
-  "AVC": {"color": "TODO", "level": 5}
+  "Enfarte do Miocárdio": {"color": "Vermelho", "level": 1},
+  "AVC": {"color": "Vermelho", "level": 1},
+  "Asma (crise)": {"color": "Laranja", "level": 2},
+  "Apendicite": {"color": "Laranja", "level": 2},
+  "Pneumonia": {"color": "Amarelo", "level": 3},
+  "Fratura Óssea": {"color": "Amarelo", "level": 3},
+  "Gastroenterite": {"color": "Amarelo", "level": 3},
+  "Infeção Urinária": {"color": "Verde", "level": 4},
+  "Enxaqueca": {"color": "Verde", "level": 4},
+  "Gripe": {"color": "Azul", "level": 5},
+  "Constipação": {"color": "Azul", "level": 5}
 }
