@@ -36,7 +36,7 @@ def main():
             print(f"warning: symptom '{sym}' ignored (not included in the model training ).")
 
     # collect mandatory demographics
-    print("\n[2] Informação Adicional Necessária")
+    print("\n[2] additional information")
     try:
         # adjust these inputs based on how your dataset actually encoded them
         age = int(input("age: "))
