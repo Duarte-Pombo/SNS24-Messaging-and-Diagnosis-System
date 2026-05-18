@@ -1,0 +1,13 @@
+{
+  "Constipação": {"color": "TODO", "level": 1},
+  "Enfarte do Miocárdio": {"color": "TODO", "level": 5},
+  "Enxaqueca": {"color": "TODO", "level": 1},
+  "Infeção Urinária": {"color": "TODO", "level": 3},
+  "Pneumonia": {"color": "TODO", "level": 5},
+  "Fratura Óssea": {"color": "TODO", "level": 4},
+  "Gripe": {"color": "TODO", "level": 2},
+  "Gastroenterite": {"color": "TODO", "level": 3},
+  "Apendicite": {"color": "TODO", "level": 5},
+  "Asma (crise)": {"color": "TODO", "level": 5},
+  "AVC": {"color": "TODO", "level": 5}
+}
