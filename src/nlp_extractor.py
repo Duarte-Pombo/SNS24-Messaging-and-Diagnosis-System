@@ -277,261 +277,83 @@ class SymptomMatch:
 
 
 # ---------------------------------------------------------------------------
-# Synonym map 
+# Base Synonym Dictionary 
 # ---------------------------------------------------------------------------
-
-SYNONYM_MAP: dict[str, str] = {
-    # ── Fatigue & Systemic ───────────────────────────────────────────────────
-    "cansado":                  "fadiga",
-    "cansada":                  "fadiga",
-    "cansaço":                  "fadiga",
-    "cansaco":                  "fadiga",
-    "esgotado":                 "fadiga",
-    "esgotada":                 "fadiga",
-    "esgotamento":              "fadiga",
-    "exausto":                  "fadiga",
-    "exausta":                  "fadiga",
-    "exaustão":                 "fadiga",
-    "sem energia":              "fadiga",
-    "sem forças":               "fadiga",
-    "moleza":                   "fadiga",
-    "não consigo dormir":       "fadiga",
-    "dificuldade dormir":       "fadiga",
-    "dificuldade de dormir":    "fadiga",
-    "noites sem dormir":        "fadiga",
-    "muito sono":               "fadiga",
-    "dormindo de dia":          "fadiga",
-    "muita sede":               "fadiga",
-    "sede excessiva":           "fadiga",
-    "bebendo muito":            "fadiga",
-    "perdendo peso":            "fadiga",
-    "emagreci":                 "fadiga",
-    "baixa de açúcar":          "fadiga",
-    "baixa de acucar":          "fadiga",
-    "açúcar baixo":             "fadiga",
-    "pele amarelada":           "fadiga",
-    "olho amarelo":             "fadiga",
-    "lábios roxos":             "fadiga",
-    "pálido":                   "fadiga",
-    "pálida":                   "fadiga",
-
-    # ── Headache ─────────────────────────────────────────────────────────────
-    "dores de cabeça":          "cefaleia pulsatil",
-    "dor de cabeça":            "cefaleia pulsatil",
-    "enxaqueca":                "cefaleia pulsatil",
-    "migrânea":                 "cefaleia pulsatil",
-    "migranea":                 "cefaleia pulsatil",
-    "cabeça doendo":            "cefaleia pulsatil",
-    "cabeça pesada":            "cefaleia pulsatil",
-    "cabeça latejando":         "cefaleia pulsatil",
-
-    # ── Chest pain ───────────────────────────────────────────────────────────
-    "dores no peito":           "dor no peito",
-    "dores de peito":           "dor no peito",
-    "aperto no peito":          "dor no peito",
-    "aperto de peito":          "dor no peito",
-    "pressão no peito":         "dor no peito",
-    "pressao no peito":         "dor no peito",
-    "pressão de peito":         "dor no peito",
-    "dor torácica":             "dor no peito",
-    "dor toracica":             "dor no peito",
-    "queimação no peito":       "dor no peito",
-
-    # ── Nausea ───────────────────────────────────────────────────────────────
-    "enjoado":                  "nausea",
-    "enjoada":                  "nausea",
-    "enjoo":                    "nausea",
-    "enjôo":                    "nausea",
-    "mal estar":                "nausea",
-    "estômago embrulhado":      "nausea",
-    "estomago embrulhado":      "nausea",
-    "vontade de vomitar":       "nausea",
-
-    # ── Vomiting ─────────────────────────────────────────────────────────────
-    "vomitando":                "vomito",
-    "vomitei":                  "vomito",
-    "vomitar":                  "vomito",
-    "vomitou":                  "vomito",
-
-    # ── Fever ────────────────────────────────────────────────────────────────
-    "temperatura":              "febre",
-    "febril":                   "febre",
-    "estado febril":            "febre",
-    "temperatura elevada":      "febre",
-    "febrinha":                 "febre",
-    "subfebril":                "febre",
-
-    # ── Chills ───────────────────────────────────────────────────────────────
-    "arrepios":                 "calafrios",
-    "tremores":                 "calafrios",
-    "agitação por frio":        "calafrios",
-
-    # ── Cough ────────────────────────────────────────────────────────────────
-    "tossindo":                 "tosse",
-    "tussia":                   "tosse",
-    "pigarro":                  "tosse",
-    "tosse com catarro":        "expectoracao",
-    "tosse com muco":           "expectoracao",
-
-    # ── Shortness of breath ──────────────────────────────────────────────────
-    "sem fôlego":               "falta de ar",
-    "sem folego":               "falta de ar",
-    "ofegante":                 "falta de ar",
-    "ofegância":                "falta de ar",
-    "respiração difícil":       "falta de ar",
-    "respiracao dificil":       "falta de ar",
-    "respiração curta":         "falta de ar",
-    "dificuldade respirar":     "falta de ar",
-    "dificuldade de respirar":  "falta de ar",
-
-    # ── Dizziness / Altered Sensorium ─────────────────────────────────────────
-    "tonto":                    "confusao mental",
-    "tonta":                    "confusao mental",
-    "vertigem":                 "confusao mental",
-    "zonzo":                    "confusao mental",
-    "zonza":                    "confusao mental",
-    "cabeça rodando":           "confusao mental",
-    "quase desmaiei":           "confusao mental",
-    "sensação de desmaio":      "confusao mental",
-    "desmaio":                  "confusao mental",
-    "desmaiei":                 "confusao mental",
-    "perda de consciência":     "confusao mental",
-
-    # ── Abdominal pain ───────────────────────────────────────────────────────
-    "dores abdominais":         "dor abdominal difusa",
-    "dor de barriga":           "dor abdominal difusa",
-    "barriga doendo":           "dor abdominal difusa",
-    "cólica":                   "dor abdominal difusa",
-    "colica":                   "dor abdominal difusa",
-    "dor na barriga":           "dor abdominal difusa",
-    "barriga dura":             "rigidez abdominal",
-    "gases":                    "dor abdominal difusa",
-    "muito gás":                "dor abdominal difusa",
-    "azia":                     "dor abdominal difusa",
-    "queimação no estômago":    "dor abdominal difusa",
-    "queimacao no estomago":    "dor abdominal difusa",
-    "refluxo":                  "dor abdominal difusa",
-    "acidez":                   "dor abdominal difusa",
-    "queimação de estômago":    "dor abdominal difusa",
-
-    # ── Swallowing / Throat ──────────────────────────────────────────────────
-    "dificuldade engolir":      "dor de garganta",
-    "dificuldade de engolir":   "dor de garganta",
-    "engasgando":               "dor de garganta",
-    "dor ao engolir":           "dor de garganta",
-    "dor de engolir":           "dor de garganta",
-    "dores de garganta":        "dor de garganta",
-    "garganta inflamada":       "dor de garganta",
-    "garganta irritada":        "dor de garganta",
-    "garganta doendo":          "dor de garganta",
-
-    # ── Swelling / Skin ──────────────────────────────────────────────────────
-    "inchado":                  "inchaço",
-    "inchada":                  "inchaço",
-    "edema":                    "inchaço",
-    "perna inchada":            "inchaço",
-    "tornozelo inchado":        "inchaço",
-    "barriga inchada":          "inchaço",
-    "abdômen distendido":       "inchaço",
-    "abdome distendido":        "inchaço",
-    "coceira":                  "inchaço",
-    "comichão":                 "inchaço",
-    "coçando":                  "inchaço",
-    "manchas na pele":          "inchaço",
-    "brotoejas":                "inchaço",
-    "urticária":                "inchaço",
-    "vermelhidão na pele":      "inchaço",
-
-    # ── Palpitations / Vitals / Anxiety ──────────────────────────────────────
-    "coração acelerado":        "palpitacoes",
-    "coração disparado":        "palpitacoes",
-    "coração pulando":          "palpitacoes",
-    "taquicardia":              "palpitacoes",
-    "coração batendo forte":    "palpitacoes",
-    "pressão alta":             "palpitacoes",
-    "pressao alta":             "palpitacoes",
-    "pressão elevada":          "palpitacoes",
-    "pressão baixa":            "palpitacoes",
-    "pressao baixa":            "palpitacoes",
-    "pressão caída":            "palpitacoes",
-    "nervoso":                  "palpitacoes",
-    "nervosa":                  "palpitacoes",
-    "angústia":                 "palpitacoes",
-    "angustia":                 "palpitacoes",
-    "agoniado":                 "palpitacoes",
-    "agoniada":                 "palpitacoes",
-
-    # ── Localized Pain / Musculoskeletal ──────────────────────────────────────
-    "dor nas costas":           "dor localizada",
-    "dores nas costas":         "dor localizada",
-    "dor lombar":               "dor localizada",
-    "coluna doendo":            "dor localizada",
-    "dor no pescoço":           "dor localizada",
-    "dor de pescoço":           "dor localizada",
-    "pescoço duro":             "dor localizada",
-    "dor muscular":             "dor localizada",
-    "dor nos músculos":         "dor localizada",
-    "dor nos musculos":         "dor localizada",
-    "dor nas articulações":     "dor localizada",
-    "dor nas articulacoes":     "dor localizada",
-    "dor nas juntas":           "dor localizada",
-    "juntas doendo":            "dor localizada",
-    "adormecido":               "dor localizada",
-    "adormecida":               "dor localizada",
-    "perna adormecida":         "dor localizada",
-    "formigando":               "dor localizada",
-    "agulhadas":                "dor localizada",
-    "picadas":                  "dor localizada",
-    "zunido":                   "dor localizada",
-    "apito no ouvido":          "dor localizada",
-    "campainha no ouvido":      "dor localizada",
-    "dor de ouvido":            "dor localizada",
-    "ouvido doendo":            "dor localizada",
-
-    # ── Arm specific ─────────────────────────────────────────────────────────
-    "braço adormecido":         "irradiacao braco",
-    "formiga no braço":         "irradiacao braco",
-
-    # ── Senses ───────────────────────────────────────────────────────────────
-    "sem olfato":               "perda apetite",
-    "perdi o cheiro":           "perda apetite",
-    "não consigo cheirar":      "perda apetite",
-    "sem paladar":              "perda apetite",
-    "perdi o gosto":            "perda apetite",
-    "não sinto sabor":          "perda apetite",
-
-    # ── Nasal / ENT ──────────────────────────────────────────────────────────
-    "sangramento pelo nariz":   "espirros",
-    "nariz sangrando":          "espirros",
-    "nariz a sangrar":          "espirros",
-    "coriza":                   "espirros",
-    "nariz escorrendo":         "espirros",
-    "nariz a pingar":           "espirros",
-    "catarro nasal":            "espirros",
-    "corrimento nasal":         "espirros",
-    "nariz entupido":           "espirros",
-    "nariz tapado":             "espirros",
-    "nariz congestionado":      "espirros",
-
-    # ── Eyes ─────────────────────────────────────────────────────────────────
-    "sensibilidade à luz":      "sensibilidade luz",
-    "sensibilidade a luz":      "sensibilidade luz",
-    "luz incomoda":             "sensibilidade luz",
-    "luz me incomoda":          "sensibilidade luz",
-
-    # ── Urinary ──────────────────────────────────────────────────────────────
-    "queimação ao urinar":      "ardor ao urinar",
-    "ardor urinário":           "ardor ao urinar",
-    "dor ao fazer xixi":        "ardor ao urinar",
-    "sangue na urina":          "ardor ao urinar",
-    "urina com sangue":         "ardor ao urinar",
-    "urinando muito":           "frequencia urinaria",
-    "muita urina":              "frequencia urinaria",
-
-    # ── Sweating ─────────────────────────────────────────────────────────────
-    "suando muito":             "suores frios",
-    "suor excessivo":           "suores frios",
-    "transpiração excessiva":   "suores frios",
+SYNONYM_MAP: dict [str, list[str]] ={
+    "comichão": ["coceira", "prurido", "comichao", "vontade de me coçar", "a coçar", "comixao"],
+    "erupção cutânea": ["erupcao", "manchas na pele", "borbulhas", "rash", "alergia na pele", "pintinhas vermelhas", "empolamento", "vermelhidão"],
+    "erupções cutâneas nodulares": ["caroços na pele", "nodulos na pele", "altos na pele", "caroços vermelhos"],
+    "espirros contínuos": ["espirro", "a espirrar", "ataque de espirros", "fartar de espirrar", "espirros de seguida", "espirros constantes", "espirros frequentes"],
+    "tremores": ["tremor", "a tremer", "tremedeira", "tremiliques", "tremuras", "tremelique"],
+    "arrepios": ["arrepio", "calafrios", "calafrio", "frio na espinha", "corpo arrepiado", "pele de galinha"],
+    "dor nas articulações": ["dor nas juntas", "dor na junta", "artralgia", "dor articular", "juntas a doer", "dor na articulacao"],
+    "dor de estômago": ["dor no estomago", "estomago a doer", "gastralgia", "dor na boca do estomago", "pontada no estomago"],
+    "acidez": ["azia", "ardor no estômago", "fervura", "refluxo", "acidez estomacal", "azedume", "queimor"],
+    "úlceras na língua": ["afta", "ferida na boca", "ferida na lingua", "chaga na boca", "ulcera na lingua", "boca magoada"],
+    "atrofia muscular": ["perda de musculo", "musculo fraco", "fraqueza no musculo", "perda de massa muscular", "amiotrofia", "musculos a secar"],
+    "vómitos": ["vomito", "a vomitar", "bolçar", "vomitar", "emese", "a deitar tudo fora", "gregar", "chamar o gregório", "disposição para vomitar"],
+    "micção ardente": ["ardor ao urinar", "dor a urinar", "ardencia ao urinar", "chichi a arder", "urina a arder", "ardor na urina", "disuria", "mijo a arder"],
+    "perdas urinárias": ["incontinencia urinaria", "perda de urina", "urina solta", "fugas de urina", "urinar nas calças", "nao aguentar a urina", "descair a urina"],
+    "fadiga": ["cansaco", "cansaço", "exaustao", "moleza", "sem energia", "fadiga extrema", "esgotamento", "prostração", "astenia", "corpo pesado", "estafado", "derreado", "sem forças"],
+    "aumento de peso": ["engordar", "ganho de peso", "engordei", "a ganhar peso", "peso a mais", "ganhei peso", "obesidade"],
+    "ansiedade": ["nervosismo", "ansioso", "ansiosa", "stress", "angústia", "inquietacao", "ataque de panico", "crise de ansiedade", "nervos em franja"],
+    "mãos e pés frios": ["extremidades frias", "mao e pe gelados", "pes gelados", "maos geladas", "pe frio", "mao fria", "dedos gelados"],
+    "alterações de humor": ["mudança de humor", "bipolaridade", "humor instavel", "mudancas de humor", "humor a variar", "irritacao repentina"],
+    "perda de peso": ["emagrecimento", "emagrecer", "emagreci", "perda de quilos", "a emagrecer", "perdi peso", "ficar na chapa"],
+    "agitação": ["agitacao", "inquietude", "irrequieto", "agitado", "agitada", "nao para quieto", "hiperativo", "desassossegado", "em pulgas"],
+    "letargia": ["preguica", "apatia", "falta de forca", "moleza", "sonolencia", "letargico", "torpor", "amorfia"],
+    "manchas na garganta": ["pontos brancos na garganta", "placas na garganta", "garganta manchada", "pus na garganta", "garganta infetada"],
+    "nível de açúcar irregular": ["glicose alta", "diabetes desregulada", "açucar no sangue", "glicemia", "glicose", "açucar alto"],
+    "tosse": ["tose", "a tossir", "tosse seca", "tosse com expetoração", "tosse produtiva", "encatarrado", "escarro", "flegma"],
+    "febre alta": ["febre", "febril", "temperatura alta", "quentura", "corpo a ferver", "pirexia", "febre forte", "febrão"],
+    "olhos encovados": ["olheiras profundas", "olhos fundos", "olho encovado", "olhos para dentro", "rosto chupado", "olheiras cavadas"],
+    "falta de ar": ["dificuldade em respirar", "dispneia", "aflição para respirar", "folego curto", "falta de folego", "asfixia", "ofegante", "cansaco para respirar"],
+    "sudorese": ["suor", "a transpirar", "suores", "transpiracao", "a suar muito", "suor excessivo", "hiperidrose", "banhado em suor"],
+    "desidratação": ["desidratacao", "falta de agua", "boca muito seca", "secura", "sede extrema"],
+    "indigestão": ["indigestao", "enfartamento", "mal estar no estomago", "empanzinado", "dispepsia", "estomago pesado", "a comida caiu mal", "comida parada"],
+    "dor de cabeça": ["dor de cabeca", "enxaqueca", "cefaleia", "cabeca a doer", "cabeca a latejar", "dor na cabeca", "cabeça pesada"],
+    "pele amarelada": ["ictericia", "pele amarela", "amarelada", "olhos amarelos", "cor de açafrão", "amarelo"],
+    "urina escura": ["chichi escuro", "urina com cor escura", "urina castanha", "urina muito amarela", "urina cor de coca cola", "urina forte"],
+    "náuseas": ["nauseas", "enjoo", "enjoos", "vontade de vomitar", "enjoada", "enjoado", "estomago embrulhado", "engulhos"],
+    "perda de apetite": ["falta de apetite", "sem fome", "inapetencia", "nao tenho fome", "falta de vontade de comer", "anorexia", "nao consigo comer", "sem apetite"],
+    "dor atrás dos olhos": ["dor no fundo do olho", "pressao nos olhos", "olhos a doer", "dor ocular", "dor atras do olho"],
+    "dor nas costas": ["dor lombar", "dor na coluna", "dores nas costas", "lombalgia", "dor nos rins", "dor nas cruzes", "dor no lombo"],
+    "obstipação": ["prisao de ventre", "intestino preso", "constipacao intestinal", "dificuldade em evacuar", "fezes duras", "entupido", "nao consigo obrar"],
+    "dor abdominal": ["dor de barriga", "dores abdominais", "colica", "pontada na barriga", "dor no baixo ventre", "desconforto abdominal"],
+    "diarreia": ["caganeira", "fezes moles", "diarreira", "desarranjo", "intestino solto", "diarréia", "frouxeira"],
+    "vasos sanguíneos dilatados": ["veias saltadas", "varizes", "derrames", "vasos dilatados", "veias aparentes"],
+    "rosto e olhos inchados": ["cara inchada", "olho inchado", "rosto inchado", "edema facial", "papos nos olhos", "cara gorda"],
+    "tiróide aumentada": ["bocio", "papo", "tiroide grande", "inchaço no pescoço", "garganta inchada", "tireoide"],
+    "unhas frágeis": ["unhas fracas", "unhas quebradiças", "unha rachada", "unhas a lascar", "unhas a quebrar"],
+    "extremidades inchadas": ["pes inchados", "maos inchadas", "pernas inchadas", "dedos inchados", "edema nas extremidades", "tornozelos inchados"],
+    "fome excessiva": ["muita fome", "fome a toda a hora", "apetite voraz", "polifagia", "fome de leão", "esganado", "sempre com fome"],
+    "contactos extraconjugais": ["traicao", "amante", "relacao extraconjugal", "parceiros multiplos", "DST", "relações fora do casamento", "risco sexual", "pular a cerca"],
+    "lábios secos e com formigueiro": ["boca seca e dormente", "labio rachado e dormente", "formigueiro nos labios", "labios ressequidos", "boca dormente"],
+    "discurso arrastado": ["fala enrolada", "dificuldade para falar", "voz arrastada", "fala arrastada", "disartria", "a falar embolado", "voz pastosa"],
+    "dor no joelho": ["dor nos joelhos", "joelho a doer", "joelho dorido", "dor na rotula", "joelho a latejar"],
+    "dor na articulação da anca": ["dor na anca", "dor na bacia", "dor na coxa", "anca a doer", "dor no osso da bacia"],
+    "fraqueza muscular": ["fraqueza", "musculos fracos", "sem forca nos musculos", "miastenia", "corpo fraco", "fraqueza nas pernas", "pernas a tremer"],
+    "rigidez cervical": ["dor de pescoco", "torcicolo", "pescoco duro", "rigidez no pescoco", "dor na nuca", "nuca dura", "pescoço preso"],
+    "inchaço das articulações": ["juntas inchadas", "articulacoes inchadas", "edema articular", "joelho inchado", "cotovelo inchado"],
+    "rigidez de movimentos": ["dificuldade em me mover", "corpo duro", "travado", "movimentos encravados", "rigidez articular", "corpo preso"],
+    "movimentos de rotação": ["tontura", "vertigem", "tudo a andar à roda", "cabeça a andar à roda", "mundo a rodar", "labirintite"],
+    "perda de equilíbrio": ["desequilibrio", "a cair", "sem equilibrio", "zonzura", "zonzo", "a cambalear"],
+    "instabilidade": ["a cambalear", "instavel", "pernas bambas", "falta de firmeza", "pernas a fraquejar"],
+    "fraqueza num lado do corpo": ["um lado fraco", "metade do corpo fraca", "hemiparesia", "dormencia de um lado", "braço e perna fracos", "paralisado de um lado"],
+    "perda de olfato": ["nao sinto os cheiros", "sem cheiro", "anosmia", "perda do olfato", "falta de cheiro"],
+    "desconforto na bexiga": ["dor na bexiga", "bexiga pesada", "pressao na bexiga", "dor no baixo ventre ao urinar"],
+    "odor fétido na urina": ["urina com mau cheiro", "chichi a cheirar mal", "chichi com cheiro forte", "urina mal cheirosa", "urina fedorenta", "urina de cheiro forte"],
+    "sensação contínua de urinar": ["vontade de urinar a toda a hora", "vontade de fazer chichi", "urina frequente", "bexiga cheia", "polaciuria"],
+    "passagem de gases": ["gases", "peidos", "traques", "flatulencia", "dar traques", "meteorismo", "barriga inchada de gases", "ventosidades"],
+    "comichão interna": ["coceira por dentro", "comichao interna", "comichão no corpo todo", "prurido interno"],
+    "aspeto tóxico (tifo)": ["cara de doente", "aspecto toxico", "muito abatido", "feições encovadas", "ar cadavérico", "má cara"],
+    "depressão": ["tristeza profunda", "depressivo", "deprimido", "muito triste", "vontade de morrer", "melancolia", "isolamento", "em baixo"],
+    "irritabilidade": ["irritado", "irritada", "sem paciencia", "pavio curto", "nervoso", "mau humor", "passar-se dos nervos"],
+    "dor muscular": ["mialgia", "dor nos musculos", "corpo dorido", "dores no corpo", "dor na carne", "músculos a doer", "dor no corpo todo"],
+    "alteração do sensório": ["confusao mental", "delirio", "desorientacao", "mente confusa", "alucinacao", "fala desconexa"],
+    "manchas vermelhas pelo corpo": ["pontos vermelhos", "pintas vermelhas", "manchas no corpo", "eritema", "placas vermelhas", "borbulhas vermelhas"],
+    "dor na barriga": ["dor abdominal", "barriga a doer", "colicas na barriga", "dor no estomago", "dor no ventre", "cólica"],
+    "menstruação anormal": ["menstruacao irregular", "sangramento fora de hora", "ciclo desregulado", "regras anormais", "período atrasado", "amenorreia", "muito sangue", "hemorragia menstrual"]
 }
 
 # ---------------------------------------------------------------------------
@@ -573,28 +395,33 @@ def build_matcher(
         patterns = [nlp.make_doc(f) for f in all_forms]
         matcher.add(key, patterns)
 
-    # 1. Register every canonical symptom + its auto-generated plural forms.
+    # Register every canonical symptom + its auto-generated plural forms.
     for phrase in symptoms:
         normalised = _strip_accents(phrase.lower()) if accent_insensitive else phrase.lower()
         key = normalised.replace(" ", "_")
         forms = [phrase] + _pt_plurals(phrase)
         _register(key, phrase, forms)
 
-    # 2. Register synonym surface forms, pointing at their canonical symptom.
-    for synonym, canonical in SYNONYM_MAP.items():
+    # Register synonym surface forms, pointing at their canonical symptom.
+    for canonical, synonyms in SYNONYM_MAP.items():
         canon_key = _strip_accents(canonical.lower()).replace(" ", "_")
         if canon_key not in key_to_phrase:
             warnings.warn(
-                f"SYNONYM_MAP: canonical '{canonical}' (for synonym '{synonym}') "
-                f"is not in the active vocabulary — entry ignored. "
-                f"Add '{canonical}' to the symptom list or fix the mapping.",
+                f"SYNONYM_MAP: canonical '{canonical}' is not in the active vocabulary "
+                f"— entry ignored. Add '{canonical}' to the symptom list or fix the mapping.",
                 stacklevel=2,
             )
             continue
-        forms = _expand([synonym] + _pt_plurals(synonym))
+        # Gather all synonym forms and their plurals
+        all_synonym_forms = []
+        for syn in synonyms:
+            all_synonym_forms.append(syn)
+            all_synonym_forms.extend(_pt_plurals(syn))
+        # Run them through preposition expansion and accent stripping
+        forms = _expand(all_synonym_forms)
         patterns = [nlp.make_doc(f) for f in forms]
+        # Add to the matcher under the canonical key
         matcher.add(canon_key, patterns)
-
     return matcher, key_to_phrase
 
 
@@ -703,9 +530,9 @@ def _run_test_mode() -> None:
           f"{len(SYNONYM_MAP)} synonyms):")
     for s in DEFAULT_SYMPTOMS:
         print(f"  • {s}")
-    print(f"\nSynonym map ({len(SYNONYM_MAP)} entries):")
-    for alt, canon in SYNONYM_MAP.items():
-        print(f"  • {alt!r:30s} → {canon!r}")
+    print(f"\nSynonym map ({sum(len(v) for v in SYNONYM_MAP.values())} total synonyms):")
+    for canon, synonyms in SYNONYM_MAP.items():
+        print(f"  • {canon!r:30s} ← {', '.join(synonyms)}")
 
     while True:
         try:
