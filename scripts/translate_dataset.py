@@ -1,9 +1,9 @@
 import csv
 
-DATASET_IN   = "dataset.csv"
-SEVERITY_IN  = "Symptom-severity.csv"
-DATASET_OUT  = "dataset_pt.csv"
-SEVERITY_OUT = "Symptom-severity_pt.csv"
+DATASET_IN   = "../data/symptoms_dataset/dataset.csv"
+SEVERITY_IN  = "../data/symptoms_dataset/Symptom-severity.csv"
+DATASET_OUT  = "../data/symptoms_dataset/dataset_pt.csv"
+SEVERITY_OUT = "../data/symptoms_dataset/Symptom-severity_pt.csv"
 
 TRANSLATIONS = {
     # ── Diseases ──────────────────────────────────────────────────────────
