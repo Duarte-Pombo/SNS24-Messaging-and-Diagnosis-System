@@ -20,7 +20,7 @@ from spacy.matcher import PhraseMatcher
 # Column names that are NOT symptoms (metadata / target)
 # ---------------------------------------------------------------------------
 NON_SYMPTOM_COLS: frozenset[str] = frozenset(
-    {"age_group", "gender", "duration", "pain_intensity", "diagnosis"}
+    {"diagnosis"}
 )
 
 
@@ -30,18 +30,18 @@ NON_SYMPTOM_COLS: frozenset[str] = frozenset(
 
 def load_symptoms_from_csv(path: str | Path) -> list[str]:
     """
-    Derive the symptom vocabulary from the header row of ../data/symptoms_data.csv.
+    Derive the symptom vocabulary from the first column of Symptom-severity_pt.csv.
     """
     path = Path(path)
     with path.open(newline="", encoding="utf-8") as fh:
         reader = csv.reader(fh)
-        headers = next(reader)
+        next(reader) 
 
-    return [
-        col.replace("_", " ")
-        for col in headers
-        if col not in NON_SYMPTOM_COLS
-    ]
+        return [
+            row[0].replace("_", " ")
+            for row in reader
+            if row and row[0] not in NON_SYMPTOM_COLS
+        ]
 
 
 # ---------------------------------------------------------------------------
@@ -50,9 +50,9 @@ def load_symptoms_from_csv(path: str | Path) -> list[str]:
 
 def _bootstrap_default_symptoms() -> list[str]:
     """Try to load from a co-located CSV; fall back to the built-in list."""
-    candidate = Path(__file__).parent / "../data/symptoms_data.csv"
+    candidate = Path(__file__).parent / "../data/symptoms_dataset/Symptom-severity_pt.csv"
     if candidate.exists():
-        return load_symptoms_from_csv(candidate)
+        return load_symptoms_from_csv(candidate)    
     return [
         # ── General / Constitutional ─────────────────────────────────────────
         "febre", "febre baixa", "febre alta", "calafrios", "fadiga",
@@ -127,44 +127,43 @@ def _strip_accents(text: str) -> str:
 
 def _pt_plurals(phrase: str) -> list[str]:
     """
-    Return likely Portuguese plural surface forms for *phrase* by inflecting
-    the **last** content word.  Multi-word plurals that don't follow these
-    rules (e.g. "dores de cabeça") should be entered in SYNONYM_MAP instead.
+    Return likely Portuguese plural surface forms for *phrase*.
+    Handles single words, and multi-word phrases by inflecting the first word, 
+    the last word, and both.
     """
     words = phrase.split()
-    last = words[-1].lower()
-    prefix = " ".join(words[:-1])
+    if not words:
+        return []
 
-    candidates: list[str] = []
+    def pluralize_word(w: str) -> str:
+        last = w.lower()
+        if last.endswith("ão"):
+            return last[:-2] + "ões" 
+        elif last.endswith("al"): return last[:-2] + "ais"
+        elif last.endswith("el"): return last[:-2] + "eis"
+        elif last.endswith("ol"): return last[:-2] + "óis"
+        elif last.endswith("ul"): return last[:-2] + "uis"
+        elif last.endswith("il"): return last[:-2] + "is"
+        elif last.endswith("m"): return last[:-1] + "ns"
+        elif last.endswith(("r", "z", "n")): return last + "es"
+        elif last.endswith("s"): return last
+        else: return last + "s"
 
-    def make(new_last: str) -> str:
-        return (prefix + " " + new_last).strip()
+    candidates: set[str] = set()
 
-    if last.endswith("ão"):
-        stem = last[:-2]
-        candidates += [make(stem + s) for s in ("ões", "ães", "ãos")]
-    elif last.endswith("al"):
-        candidates.append(make(last[:-2] + "ais"))
-    elif last.endswith("el"):
-        candidates.append(make(last[:-2] + "eis"))
-    elif last.endswith("ol"):
-        candidates.append(make(last[:-2] + "óis"))
-    elif last.endswith("ul"):
-        candidates.append(make(last[:-2] + "uis"))
-    elif last.endswith("il"):
-        candidates.append(make(last[:-2] + "is"))
-    elif last.endswith("gem"):
-        candidates.append(make(last[:-2] + "ns"))
-    elif last.endswith("m") and not last.endswith("gem"):
-        candidates.append(make(last[:-1] + "ns"))
-    elif last.endswith("nte"):
-        candidates.append(make(last + "s"))
-    elif last.endswith(("r", "z", "n")):
-        candidates.append(make(last + "es"))
-    elif last.endswith("s"):
-        pass
-    else:
-        candidates.append(make(last + "s"))
+    # single word
+    if len(words) == 1:
+        candidates.add(pluralize_word(words[0]))
+        return list(candidates - {phrase})
+
+    # pluralize only the last word
+    candidates.add(" ".join(words[:-1] + [pluralize_word(words[-1])]))
+    
+    # pluralize only the first word
+    candidates.add(" ".join([pluralize_word(words[0])] + words[1:]))
+    
+    # pluralize both first and last
+    candidates.add(" ".join([pluralize_word(words[0])] + words[1:-1] + [pluralize_word(words[-1])]))
 
     return [c for c in candidates if c != phrase]
 
@@ -695,8 +694,6 @@ def _run_test_mode() -> None:
 
     print("=" * 60)
     print("  NLP Symptom Extractor — interactive test mode")
-    print("  Type a Portuguese sentence and press Enter.")
-    print("  Leave the line empty and press Enter to quit.")
     print("=" * 60)
 
     # Warm up the pipeline once so the first query feels instant.
