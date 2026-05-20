@@ -1,5 +1,6 @@
 import os
 import joblib
+import argparse
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
@@ -10,15 +11,40 @@ from sklearn.metrics import classification_report
 
 # Directory configs
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_PATH = os.path.join(BASE_DIR, "data", "symptoms_dataset", "dataset_binary_pt.csv")
-SEVERITY_PATH = os.path.join(BASE_DIR, "data", "symptoms_dataset", "Symptom-severity_pt.csv")
+DATA_DIR = os.path.join(BASE_DIR, "data", "symptoms_dataset")
+SEVERITY_PATH = os.path.join(DATA_DIR, "Symptom-severity_pt.csv")
 MODEL_DIR = os.path.join(BASE_DIR, "models")
+
+DATA_FILES = {
+    "clean": "dataset_binary_pt.csv",
+    "low_noise": "dataset_binary_pt_low_noise.csv",
+    "high_noise": "dataset_binary_pt_high_noise.csv",
+    "synthetic": "dataset_synthetic_pt.csv"
+}
 
 TARGET = "diagnosis"
 
-def load_data():
-    df = pd.read_csv(DATA_PATH)
-    
+def load_data(dataset_type="clean"):
+    if dataset_type == "combined":
+        dfs = []
+        for name, filename in DATA_FILES.items():
+            path = os.path.join(DATA_DIR, filename)
+            if os.path.exists(path):
+                dfs.append(pd.read_csv(path))
+            else:
+                print(f"Warning: {path} not found. Skipping.")
+        if not dfs:
+            raise FileNotFoundError("No datasets found to combine.")
+        
+        df = pd.concat(dfs, ignore_index=True)
+        print(f"Loaded combined dataset. Total shape: {df.shape}")
+    else:
+        path = os.path.join(DATA_DIR, DATA_FILES[dataset_type])
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"Dataset not found: {path}")
+        df = pd.read_csv(path)
+        print(f"Loaded {dataset_type} dataset. Shape: {df.shape}")
+        
     # Exclude target and any other non-feature columns
     exclude_cols = {TARGET, 'prognóstico'}
     features = [c for c in df.columns if c not in exclude_cols]
@@ -129,8 +155,19 @@ def evaluate(clf, le, X_test, y_test, model_name="Model"):
     print()
 
 if __name__ == "__main__":
-    print("Loading data...")
-    X, y, features = load_data()
+    # Setup Argument Parser
+    parser = argparse.ArgumentParser(description="Train ML models on clean, noisy, or combined symptom datasets.")
+    parser.add_argument(
+        "--dataset", 
+        type=str, 
+        choices=["clean", "low_noise", "high_noise", "combined"], 
+        default="clean",
+        help="Select which dataset variant to train on."
+    )
+    args = parser.parse_args()
+
+    print(f"--- Starting training pipeline using '{args.dataset}' dataset ---")
+    X, y, features = load_data(args.dataset)
 
     print("Encoding labels...")
     y_encoded, le = encode_labels(y)
@@ -138,17 +175,20 @@ if __name__ == "__main__":
     print("Splitting data...")
     X_train, X_test, y_train, y_test = split_data(X, y_encoded)
 
+    # Determine file suffix to avoid overwriting models unless intended
+    suffix = "" if args.dataset == "clean" else f"_{args.dataset}"
+
     print("Training Random Forest...")
     rf_clf = train_random_forest(X_train, y_train)
     evaluate(rf_clf, le, X_test, y_test, "Random Forest")
-    save_model(rf_clf, le, features, "random_forest.pkl")
+    save_model(rf_clf, le, features, f"random_forest{suffix}.pkl")
 
     print("Training Gradient Boosting...")
     gb_clf = train_gradient_boosting(X_train, y_train)
     evaluate(gb_clf, le, X_test, y_test, "Gradient Boosting")
-    save_model(gb_clf, le, features, "gradient_boosting.pkl")
+    save_model(gb_clf, le, features, f"gradient_boosting{suffix}.pkl")
 
     print("Training Logistic Regression...")
     lr_clf = train_logistic_regression(X_train, y_train)
     evaluate(lr_clf, le, X_test, y_test, "Logistic Regression")
-    save_model(lr_clf, le, features, "logistic_regression.pkl")
+    save_model(lr_clf, le, features, f"logistic_regression{suffix}.pkl")
