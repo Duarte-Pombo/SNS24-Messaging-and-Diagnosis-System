@@ -1,4 +1,3 @@
-# frontend - StreamLit CURRENT IS A PLACEHOLDER FOR TESTING
 import sys
 import os
 
@@ -6,7 +5,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.nlp_extractor import extract_symptoms
-from src.ml_trainer import predict_top3, EXPECTED_FEATURES
+from src.ml_trainer import predict_top3
 
 def main():
     print("\n=== SNS24 prot. 1 ===")
@@ -22,33 +21,11 @@ def main():
 
     print(f"detected symptoms: {', '.join(extracted_symptoms)}")
 
-    # data formating for the ml model
-    ml_ready_symptoms = [sym.replace(" ", "_") for sym in extracted_symptoms]
+    # Data formatting for the ML model
+    feature_vector = {sym.replace(" ", "_"): 1 for sym in extracted_symptoms}
 
-    # initialize feature vector with zeros
-    feature_vector = {feature: 0 for feature in EXPECTED_FEATURES}
-
-    # set detected symptoms to 1
-    for sym in ml_ready_symptoms:
-        if sym in feature_vector:
-            feature_vector[sym] = 1
-        else:
-            print(f"warning: symptom '{sym}' ignored (not included in the model training ).")
-
-    # collect mandatory demographics
-    print("\n[2] additional information")
-    try:
-        # adjust these inputs based on how your dataset actually encoded them
-        age = int(input("age: "))
-        feature_vector['age_group'] = age 
-        
-        gender = int(input("gender (0 = Male, 1 = Female): "))
-        feature_vector['gender'] = gender
-    except ValueError:
-        print("warning: invalid input, usign 0 as default.")
-
-    # model prediction
-    print("\n[3] calculating possible diagnosis...")
+    # Model prediction
+    print("\n[2] calculating possible diagnosis...")
     try:
         # predict_top3 returns [(condition, probability, placeholder_triage_val)]
         predictions = predict_top3(feature_vector)

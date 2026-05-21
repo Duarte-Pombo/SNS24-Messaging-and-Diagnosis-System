@@ -26,47 +26,57 @@ def generate_noisy_datasets():
     # Map symptoms to their severity weights
     severity_dict = dict(zip(severity_df['Symptom'], severity_df['weight']))
     
-    # Isolate mild symptoms to simulate realistic user errors
-    # Select symptoms with a severity weight <= 4 (e.g., fatigue, headache)
-    # Severe symptoms (weight > 4) remain unaffected
-    flippable_cols = [col for col in df.columns if col in severity_dict and severity_dict[col] <= 4]
+    # Exclude non-feature columns
+    exclude_cols = {'diagnosis', 'prognóstico'}
+    all_symptoms = [c for c in df.columns if c not in exclude_cols]
+
+    # Categorize symptoms into mild and severe
+    # If a symptom is missing from severity_dict, assume a safe default weight of 1 (mild)
+    mild_cols = [col for col in all_symptoms if severity_dict.get(col, 1) <= 4]
+    severe_cols = [col for col in all_symptoms if severity_dict.get(col, 1) > 4]
     
-    print(f"Total symptoms in dataset: {len(df.columns) - 1}")
-    print(f"Flippable 'realistic' symptoms (severity <= 4): {len(flippable_cols)}")
+    print(f"Total symptoms: {len(all_symptoms)}")
+    print(f"Mild symptoms (Primary noise targets): {len(mild_cols)}")
+    print(f"Severe symptoms (Baseline noise targets): {len(severe_cols)}")
     
-    def apply_noise(original_df, columns_to_flip, noise_prob):
+    def apply_dual_noise(original_df, mild_symptoms, severe_symptoms, mild_prob, severe_prob):
         """
-        Simulate user error by flipping bits (0 -> 1 and 1 -> 0) 
-        for the specified realistic columns based on the given probability.
+        Apply higher probability noise to mild symptoms and a baseline 
+        probability noise to severe symptoms to prevent the model 
+        from anchoring to perfect indicators.
         """
         noisy_df = original_df.copy()
         
-        for col in columns_to_flip:
-            # Generate a random boolean mask for the current column
-            # A True value indicates the row value should be flipped
-            flip_mask = np.random.rand(len(noisy_df)) < noise_prob
-            
-            # Apply the mathematical flip: 1 - current_value 
-            # (1 becomes 0 "forgot to mention", 0 becomes 1 "mistakenly mentioned")
+        # Apply primary noise to mild symptoms
+        for col in mild_symptoms:
+            flip_mask = np.random.rand(len(noisy_df)) < mild_prob
+            noisy_df.loc[flip_mask, col] = 1 - noisy_df.loc[flip_mask, col]
+
+        # Apply baseline error noise to severe symptoms
+        for col in severe_symptoms:
+            flip_mask = np.random.rand(len(noisy_df)) < severe_prob
             noisy_df.loc[flip_mask, col] = 1 - noisy_df.loc[flip_mask, col]
             
         return noisy_df
 
-    # Generate Low Noise Dataset (10-15%)
-    # Set 12.5% as the median probability for low noise
-    low_noise_prob = 0.125
-    print(f"\nGenerating low noise dataset (~{low_noise_prob*100}% noise on realistic symptoms)...")
-    df_low_noise = apply_noise(df, flippable_cols, low_noise_prob)
+    # Generate Low Noise Dataset
+    # Mild symptoms: 12.5% | Severe symptoms: 3%
+    low_mild_prob = 0.125
+    low_severe_prob = 0.03
+    print(f"\nGenerating low noise dataset ({low_mild_prob*100}% mild noise, {low_severe_prob*100}% severe error)...")
+    df_low_noise = apply_dual_noise(df, mild_cols, severe_cols, low_mild_prob, low_severe_prob)
     df_low_noise.to_csv(low_noise_out_path, index=False)
     print(f"Saved to: {low_noise_out_path}")
 
-    # Generate High Noise Dataset (25-30%)
-    # Set 27.5% as the median probability for high noise
-    high_noise_prob = 0.275
-    print(f"Generating high noise dataset (~{high_noise_prob*100}% noise on realistic symptoms)...")
-    df_high_noise = apply_noise(df, flippable_cols, high_noise_prob)
+    # Generate High Noise Dataset
+    # Mild symptoms: 27.5% | Severe symptoms: 5%
+    high_mild_prob = 0.275
+    high_severe_prob = 0.05
+    print(f"Generating high noise dataset ({high_mild_prob*100}% mild noise, {high_severe_prob*100}% severe error)...")
+    df_high_noise = apply_dual_noise(df, mild_cols, severe_cols, high_mild_prob, high_severe_prob)
     df_high_noise.to_csv(high_noise_out_path, index=False)
     print(f"Saved to: {high_noise_out_path}")
+    
     print("\nDataset generation complete!")
 
 if __name__ == "__main__":
