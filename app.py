@@ -54,16 +54,16 @@ def main():
         else:
             print(f"warning: symptom '{sym}' ignored (not included in the model training ).")
 
-        # collect mandatory demographics and vitals
-        print("\n[2] additional information")
+    # collect mandatory demographics and vitals
+    print("\n[2] additional information")
 
-        feature_vector['age_group'] = get_integer_input("age: ")
+    feature_vector['age_group'] = get_integer_input("age: ")
 
-        feature_vector['gender'] = get_integer_input("gender (0 = Male, 1 = Female): ")
+    feature_vector['gender'] = get_integer_input("gender (0 = Male, 1 = Female): ")
 
-        feature_vector['duration'] = min(get_integer_input("duration of symptoms (in days): ", default_val=0),2)
+    feature_vector['duration'] = min(get_integer_input("duration of symptoms (in days): ", default_val=0),2)
 
-        feature_vector['pain_intensity'] = get_integer_input("pain intensity (0 to 10): ", default_val=0)
+    feature_vector['pain_intensity'] = get_integer_input("pain intensity (0 to 10): ", default_val=0)
 
     # model prediction
     print("\n[3] calculating possible diagnosis...")
