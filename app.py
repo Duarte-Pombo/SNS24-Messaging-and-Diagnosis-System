@@ -8,6 +8,13 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from src.nlp_extractor import extract_symptoms
 from src.ml_trainer import predict_top3, EXPECTED_FEATURES
 from src.triage_logic import determine_urgency
+from src.followup import (
+    needs_followup,
+    get_followup_questions,
+    apply_answers,
+    MAX_ROUNDS,
+    FOLLOWUP_THRESHOLD,
+)
 
 
 def get_integer_input(prompt_text: str, default_val: int = 0) -> int:
@@ -68,14 +75,44 @@ def main():
     # model prediction
     print("\n[3] calculating possible diagnosis...")
     try:
-        # predict_top3 returns [(condition, probability, placeholder_triage_val)]
         predictions = predict_top3(feature_vector)
-        
+        asked_features = set()
+
+        for round_num in range(1, MAX_ROUNDS + 1):
+            if not needs_followup(predictions):
+                break
+
+            questions = get_followup_questions(
+                feature_vector, predictions, asked_features
+            )
+            if not questions:
+                break
+
+            top_prob = predictions[0][1]
+            print(
+                f"\nConfiança: {top_prob:.0f}% — ronda {round_num} de {MAX_ROUNDS}"
+            )
+            print("Para melhorar o diagnóstico, responda às seguintes questões:")
+
+            answers = {}
+            for q in questions:
+                ans = input(f"  {q['question_pt']} (s/n): ").strip().lower()
+                answers[q["feature"]] = 1 if ans.startswith("s") else 0
+                asked_features.add(q["feature"])
+
+            feature_vector = apply_answers(feature_vector, answers)
+            predictions = predict_top3(feature_vector)
+
         print("\n=== diagnosis results ===")
+        top_prob = predictions[0][1]
+        if top_prob < FOLLOWUP_THRESHOLD:
+            print(
+                f"(confiança abaixo de {FOLLOWUP_THRESHOLD:.0f}% — resultado indicativo)"
+            )
         for i, (condition, prob, _) in enumerate(predictions, 1):
             print(f"{i}. {condition} ({prob:.1f}%). Urgency: {determine_urgency(condition)}")
             # Na nossa app final deve ser associada uma cor ao número (1-azul, 2-verde, 3-amarelo, 4-laranja, 5-vermelho)
-            
+
     except FileNotFoundError:
         print("\n error: model not found. execute 'python src/ml_trainer.py'")
 
