@@ -1,5 +1,5 @@
 """
-SNS24 — Sistema de Apoio ao Diagnóstico Inteligente
+SNS24 — Sistema de Triagem Automática
 Streamlit Dashboard  ·  app.py
 """
 
@@ -23,8 +23,7 @@ sys.path.insert(0, str(ROOT))
 
 # ── Page config  (must be FIRST Streamlit call) ────────────────────────────────
 st.set_page_config(
-    page_title="SNS24 · Diagnóstico Inteligente",
-    page_icon="⚕️",
+    page_title="SNS24 · Triagem e Encaminhamento",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -61,9 +60,9 @@ MODEL_LABELS: dict[str, str] = {
     "logistic_regression.pkl": "Logistic Regression",
 }
 MODEL_COLORS: dict[str, str] = {
-    "random_forest.pkl":      "#00C2A8",
-    "gradient_boosting.pkl":  "#4F8EF7",
-    "logistic_regression.pkl": "#A78BFA",
+    "random_forest.pkl":      "#38BDF8",  # Sky blue accent
+    "gradient_boosting.pkl":  "#818CF8",  # Indigo accent
+    "logistic_regression.pkl": "#34D399",  # Emerald accent
 }
 MAX_ROUNDS            = 5
 CONFIDENCE_THRESHOLD  = 70.0
@@ -71,29 +70,29 @@ QUESTIONS_PER_ROUND   = 2
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CSS  —  full dark medical theme
+# CSS  —  Pure Black Theme
 # ══════════════════════════════════════════════════════════════════════════════
 def inject_css() -> None:
     st.markdown(
         """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
-    --bg:       #070C18;
-    --bg2:      #0D1427;
-    --bg3:      #131D35;
-    --card:     #0F1929;
-    --border:   #1C2E4A;
-    --accent:   #00C2A8;
-    --accent2:  #4F8EF7;
-    --accent3:  #A78BFA;
-    --text:     #DDE8FF;
-    --text2:    #6878A0;
+    --bg:       #000000; /* Pure Black */
+    --bg2:      #0A0A0A; /* Very dark gray for sidebar */
+    --bg3:      #171717; /* Subtle highlight */
+    --card:     #0A0A0A; /* Card background */
+    --border:   #262626; /* Neutral border */
+    --accent:   #38BDF8; /* Sky 400 */
+    --accent2:  #818CF8;
+    --accent3:  #34D399;
+    --text:     #FAFAFA; /* Near white */
+    --text2:    #A3A3A3; /* Neutral gray */
     --success:  #10B981;
-    --warn:     #F5A623;
+    --warn:     #F59E0B;
     --danger:   #EF4444;
-    --font:     'Plus Jakarta Sans', sans-serif;
+    --font:     'Roboto', sans-serif;
     --mono:     'JetBrains Mono', monospace;
 }
 
@@ -124,67 +123,60 @@ p, label, span, div { font-family: var(--font); }
 /* ── Buttons ────────────────────────────────────────────────────────── */
 .stButton > button {
     font-family: var(--font) !important;
-    font-weight: 600 !important;
-    border-radius: 9px !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
     border: 1px solid var(--border) !important;
     background: var(--bg3) !important;
-    color: var(--text2) !important;
-    transition: all 0.18s ease !important;
-    letter-spacing: 0.01em !important;
+    color: var(--text) !important;
+    transition: all 0.15s ease !important;
 }
 .stButton > button:hover {
     border-color: var(--accent) !important;
     color: var(--accent) !important;
-    background: rgba(0,194,168,0.07) !important;
-    transform: translateY(-1px) !important;
+    background: var(--bg2) !important;
 }
 .btn-primary .stButton > button {
     background: var(--accent) !important;
-    color: #040810 !important;
+    color: #000000 !important;
     border: none !important;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
 }
 .btn-primary .stButton > button:hover {
-    background: #00D9BC !important;
-    color: #040810 !important;
-    transform: translateY(-1px) !important;
+    background: #7DD3FC !important;
+    color: #000000 !important;
 }
 .btn-yes .stButton > button {
-    background: rgba(16,185,129,0.12) !important;
-    border-color: #10B981 !important;
-    color: #10B981 !important;
-    font-size: 1rem !important;
-    padding: 0.55rem 0 !important;
+    background: rgba(16,185,129,0.1) !important;
+    border-color: rgba(16,185,129,0.3) !important;
+    color: #34D399 !important;
 }
 .btn-yes .stButton > button:hover {
-    background: rgba(16,185,129,0.24) !important;
+    background: rgba(16,185,129,0.2) !important;
     color: #10B981 !important;
 }
 .btn-no .stButton > button {
     background: rgba(239,68,68,0.1) !important;
-    border-color: #EF4444 !important;
-    color: #EF4444 !important;
-    font-size: 1rem !important;
-    padding: 0.55rem 0 !important;
+    border-color: rgba(239,68,68,0.3) !important;
+    color: #F87171 !important;
 }
 .btn-no .stButton > button:hover {
-    background: rgba(239,68,68,0.22) !important;
+    background: rgba(239,68,68,0.2) !important;
     color: #EF4444 !important;
 }
 
 /* ── Text area ──────────────────────────────────────────────────────── */
 .stTextArea textarea {
-    background: var(--bg3) !important;
+    background: var(--bg2) !important;
     border: 1px solid var(--border) !important;
     color: var(--text) !important;
     font-family: var(--font) !important;
     font-size: 0.95rem !important;
-    border-radius: 10px !important;
+    border-radius: 6px !important;
     line-height: 1.6 !important;
 }
 .stTextArea textarea:focus {
     border-color: var(--accent) !important;
-    box-shadow: 0 0 0 2px rgba(0,194,168,0.18) !important;
+    box-shadow: 0 0 0 1px var(--accent) !important;
 }
 .stTextArea label { color: var(--text2) !important; font-size: 0.85rem !important; }
 
@@ -192,250 +184,233 @@ p, label, span, div { font-family: var(--font); }
 .stRadio label { color: var(--text2) !important; font-size: 0.85rem !important; }
 .stRadio [data-testid="stMarkdownContainer"] p { color: var(--text) !important; }
 .stRadio div[role="radiogroup"] label { 
-    padding: 8px 14px !important;
-    border-radius: 8px !important;
-    margin: 3px 0 !important;
+    padding: 8px 12px !important;
+    border-radius: 6px !important;
+    margin: 2px 0 !important;
 }
 
 /* ── Hide chrome ────────────────────────────────────────────────────── */
-#MainMenu, footer, header { visibility: hidden !important; }
+#MainMenu, footer { visibility: hidden !important; }
+header { background: transparent !important; }
 [data-testid="stDecoration"] { display: none !important; }
-.block-container { padding-top: 2rem !important; }
+.block-container { padding-top: 2.5rem !important; }
 
 /* ── Custom layout components ────────────────────────────────────────  */
-
 .sns-logo-area {
-    padding: 26px 22px 18px;
+    padding: 24px 20px 16px;
     border-bottom: 1px solid var(--border);
-    margin-bottom: 4px;
+    margin-bottom: 8px;
 }
 .sns-subtitle {
     color: var(--text2);
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    margin: 5px 0 0;
+    margin: 4px 0 0;
 }
 
 .nav-section-label {
     color: var(--text2);
-    font-size: 0.68rem;
-    letter-spacing: 0.14em;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding: 14px 22px 6px;
+    padding: 16px 20px 8px;
 }
 
 .sidebar-model-status {
-    margin: 0 14px;
-    padding: 12px 16px;
-    background: var(--bg3);
+    margin: 0 16px;
+    padding: 12px 14px;
+    background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    font-size: 0.78rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
 }
-.sms-label { color: var(--text2); font-size: 0.7rem; text-transform: uppercase;
-             letter-spacing: 0.08em; margin-bottom: 3px; }
-.sms-model { color: var(--text); font-weight: 600; }
+.sms-label { color: var(--text2); font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px; }
+.sms-model { color: var(--text); font-weight: 500; }
 
 .status-dot {
     display: inline-block;
     width: 6px; height: 6px;
     border-radius: 50%;
-    margin-right: 5px;
+    margin-right: 6px;
     vertical-align: middle;
 }
-.dot-ok  { background: var(--success); box-shadow: 0 0 6px #10B981; }
+.dot-ok  { background: var(--success); }
 .dot-off { background: var(--text2); }
 
-.page-header { margin-bottom: 24px; }
+.page-header { margin-bottom: 28px; }
 .page-title  {
-    font-size: 1.75rem; font-weight: 800;
+    font-size: 1.6rem; font-weight: 600;
     color: var(--text); margin: 0; line-height: 1.2;
 }
-.page-sub    { font-size: 0.88rem; color: var(--text2); margin-top: 5px; }
+.page-sub    { font-size: 0.9rem; color: var(--text2); margin-top: 6px; }
 
 .card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px 22px;
-    margin-bottom: 12px;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
 }
-.card-accent { border-left: 3px solid var(--accent); }
+.card-accent { border-top: 3px solid var(--accent); }
 
 /* symptom chips */
 .symptom-chip {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 4px 11px;
-    background: rgba(79,142,247,0.11);
-    border: 1px solid rgba(79,142,247,0.28);
-    border-radius: 20px;
-    font-size: 0.78rem;
-    color: #7CB9FF;
-    margin: 3px 2px;
+    gap: 6px;
+    padding: 4px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: var(--text);
+    margin: 4px 4px 4px 0;
     font-family: var(--mono);
-    letter-spacing: 0.01em;
 }
 
 /* diagnosis cards */
 .diag-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px 22px;
-    margin-bottom: 10px;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
 }
 .diag-card.top {
     border-color: var(--accent);
-    box-shadow: 0 0 20px rgba(0,194,168,0.1);
-    background: linear-gradient(135deg, rgba(0,194,168,0.04), var(--card));
+    background: var(--bg);
 }
-.diag-name { font-size: 1rem; font-weight: 600; color: var(--text); }
-.diag-prob { font-family: var(--mono); font-size: 1.45rem; font-weight: 700; }
+.diag-name { font-size: 1.05rem; font-weight: 500; color: var(--text); }
+.diag-prob { font-family: var(--mono); font-size: 1.2rem; font-weight: 600; }
 .diag-bar-bg  {
-    height: 5px; background: var(--bg3);
-    border-radius: 3px; margin-top: 10px; overflow: hidden;
+    height: 4px; background: var(--bg3);
+    border-radius: 2px; margin-top: 12px; overflow: hidden;
 }
-.diag-bar-fill { height: 100%; border-radius: 3px; }
+.diag-bar-fill { height: 100%; border-radius: 2px; }
 
 /* confidence display */
 .conf-display {
     text-align: center;
-    padding: 18px;
-    background: var(--bg3);
+    padding: 20px;
+    background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    margin-bottom: 14px;
+    border-radius: 8px;
+    margin-bottom: 16px;
 }
 .conf-label {
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    font-weight: 600;
     color: var(--text2);
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
-.conf-value          { font-family: var(--mono); font-size: 2.4rem; font-weight: 700; color: var(--warn); }
+.conf-value          { font-family: var(--mono); font-size: 2.2rem; font-weight: 600; color: var(--warn); }
 .conf-value.high     { color: var(--success); }
-.conf-subtext        { font-size: 0.73rem; color: var(--text2); margin-top: 3px; }
+.conf-subtext        { font-size: 0.8rem; color: var(--text2); margin-top: 4px; }
 
 /* ── Flashcard ───────────────────────────────────────────────────────── */
-@keyframes slideInRight {
-    from { opacity: 0; transform: translateX(55px) scale(0.97); }
-    to   { opacity: 1; transform: translateX(0)   scale(1);    }
-}
-@keyframes pulseGlow {
-    0%, 100% { box-shadow: 0 4px 24px rgba(0,194,168,0.12); }
-    50%       { box-shadow: 0 4px 36px rgba(0,194,168,0.26); }
-}
-
 .flashcard {
-    background: var(--card);
-    border: 1px solid var(--accent);
-    border-radius: 18px;
-    padding: 30px 26px 24px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
     position: relative;
-    animation: slideInRight 0.38s cubic-bezier(0.25,0.8,0.25,1) both,
-               pulseGlow 3s ease-in-out 0.5s infinite;
 }
 .flashcard-badge {
     position: absolute;
-    top: -11px; left: 22px;
-    background: var(--accent);
-    color: #040810;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 3px 12px;
-    border-radius: 12px;
+    top: -10px; left: 20px;
+    background: var(--bg3);
+    color: var(--text);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
 }
 .flashcard-round {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     color: var(--text2);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 6px;
+    margin-bottom: 12px;
 }
 .flashcard-q {
-    font-size: 1.15rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 500;
     color: var(--text);
-    line-height: 1.55;
-    margin: 10px 0 20px;
+    line-height: 1.6;
+    margin: 12px 0 24px;
 }
 .flashcard-sym {
     color: var(--accent);
-    font-style: italic;
+    font-weight: 600;
 }
-.fp-dots { display: flex; gap: 6px; margin-bottom: 18px; }
-.fp-dot  { height: 3px; border-radius: 2px; flex: 1; background: var(--border); }
+.fp-dots { display: flex; gap: 4px; margin-bottom: 16px; }
+.fp-dot  { height: 4px; border-radius: 2px; flex: 1; background: var(--bg3); }
 .fp-dot.done    { background: var(--accent); }
-.fp-dot.current { background: var(--accent); opacity: 0.5; }
+.fp-dot.current { background: var(--accent); opacity: 0.4; }
 
 /* ── Results ─────────────────────────────────────────────────────────── */
-.result-medal { font-size: 1.5rem; }
+.result-rank { 
+    font-size: 0.85rem; 
+    color: var(--text2); 
+    font-weight: 600; 
+    margin-right: 12px;
+}
 .warning-box {
-    background: rgba(245,166,35,0.07);
-    border: 1px solid rgba(245,166,35,0.3);
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin-top: 20px;
+    background: rgba(245, 158, 11, 0.05);
+    border-left: 3px solid var(--warn);
+    padding: 16px;
+    margin-top: 24px;
+    border-radius: 0 4px 4px 0;
 }
 
 /* ── Benchmarks ──────────────────────────────────────────────────────── */
 .bench-model-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin: 24px 0 12px;
+    gap: 12px;
+    margin: 32px 0 16px;
 }
 .bench-color-dot {
-    width: 10px; height: 10px;
-    border-radius: 3px;
-    flex-shrink: 0;
+    width: 12px; height: 12px;
+    border-radius: 2px;
 }
-.bench-model-name { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+.bench-model-name { font-size: 1.1rem; font-weight: 500; color: var(--text); }
 
 .metric-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px 14px;
+    border-radius: 6px;
+    padding: 16px;
     text-align: center;
 }
 .metric-label {
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
+    font-size: 0.75rem;
     color: var(--text2);
-    margin-bottom: 7px;
+    margin-bottom: 8px;
 }
 .metric-value {
     font-family: var(--mono);
-    font-size: 1.85rem;
-    font-weight: 700;
+    font-size: 1.6rem;
+    font-weight: 600;
 }
 
 .section-divider {
     border: none;
     border-top: 1px solid var(--border);
-    margin: 28px 0;
+    margin: 40px 0 30px;
 }
 .section-title {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--text2);
-    margin-bottom: 16px;
-    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text);
+    margin-bottom: 20px;
+    font-weight: 500;
 }
 
 /* ── Scrollbar ───────────────────────────────────────────────────────── */
-::-webkit-scrollbar        { width: 5px; height: 5px; }
-::-webkit-scrollbar-track  { background: var(--bg2); }
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: var(--bg); }
 ::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text2); }
 
@@ -444,9 +419,9 @@ p, label, span, div { font-family: var(--font); }
 .streamlit-expanderHeader {
     background: var(--card) !important;
     border-color: var(--border) !important;
-    border-radius: 10px !important;
+    border-radius: 6px !important;
 }
-.stAlert { border-radius: 10px !important; }
+.stAlert { border-radius: 6px !important; }
 div[data-testid="stVerticalBlock"] > div > div > div { background: transparent !important; }
 </style>
         """,
@@ -499,7 +474,7 @@ def get_available_models() -> list[str]:
 
 @st.cache_data(show_spinner=False)
 def evaluate_all_models() -> dict:
-    """Evaluate every saved .pkl on the held-out test split.  Cached."""
+    """Evaluate every saved .pkl on the held-out test split. Cached."""
     out: dict = {}
     try:
         X, y, features = load_data("combined")
@@ -543,18 +518,20 @@ def evaluate_all_models() -> dict:
 def render_sidebar() -> None:
     with st.sidebar:
         # ── Logo ──────────────────────────────────────────────────────────────
-        logo_path = ROOT / "assets" / "sns24-logo.png"
         st.markdown('<div class="sns-logo-area">', unsafe_allow_html=True)
+        
+        logo_path = ROOT / "assets" / "sns24-logo.png"
         if logo_path.exists():
-            st.image(str(logo_path), width=120)
+            st.image(str(logo_path), use_container_width=True)
         else:
             st.markdown(
-                '<span style="font-size:1.5rem;font-weight:800;'
-                'color:var(--accent);letter-spacing:-0.02em;">SNS24</span>',
+                '<span style="font-size:1.4rem;font-weight:700;'
+                'color:var(--text);letter-spacing:0.02em;">SNS24</span>',
                 unsafe_allow_html=True,
             )
+            
         st.markdown(
-            '<p class="sns-subtitle">Sistema de Apoio ao Diagnóstico</p>',
+            '<p class="sns-subtitle">Triagem e Encaminhamento</p>',
             unsafe_allow_html=True,
         )
         st.markdown("</div>", unsafe_allow_html=True)
@@ -566,20 +543,20 @@ def render_sidebar() -> None:
         col_a, col_b = st.columns(2)
         with col_a:
             if st.button(
-                "⚕ Diagnóstico", use_container_width=True,
+                "Sintomas", use_container_width=True,
                 type="primary" if page == "diagnosis" else "secondary",
             ):
                 st.session_state.page = "diagnosis"
                 st.rerun()
         with col_b:
             if st.button(
-                "📊 Benchmarks", use_container_width=True,
+                "Métricas", use_container_width=True,
                 type="primary" if page == "benchmarks" else "secondary",
             ):
                 st.session_state.page = "benchmarks"
                 st.rerun()
 
-        st.markdown("<hr class='section-divider'>", unsafe_allow_html=True)
+        st.markdown("<hr class='section-divider' style='margin: 20px 0;'>", unsafe_allow_html=True)
 
         # ── Session status ────────────────────────────────────────────────────
         if st.session_state.phase not in ("setup",):
@@ -587,12 +564,12 @@ def render_sidebar() -> None:
             label = MODEL_LABELS.get(model_name, model_name)
 
             top_prob = st.session_state.top_prob
-            conf_col = "#10B981" if top_prob >= CONFIDENCE_THRESHOLD else "#F5A623" if top_prob > 0 else "#6878A0"
+            conf_col = "var(--success)" if top_prob >= CONFIDENCE_THRESHOLD else "var(--warn)" if top_prob > 0 else "var(--text2)"
 
             st.markdown(
                 f"""
                 <div class="sidebar-model-status">
-                    <div class="sms-label">Modelo activo</div>
+                    <div class="sms-label">Modelo Ativo</div>
                     <div class="sms-model">{label or "—"}</div>
                 </div>
                 """,
@@ -603,7 +580,7 @@ def render_sidebar() -> None:
                 st.markdown(
                     f"""
                     <div class="sidebar-model-status" style="margin-top:8px;">
-                        <div class="sms-label">Confiança actual</div>
+                        <div class="sms-label">Certeza do Sistema</div>
                         <div class="sms-model" style="color:{conf_col};
                              font-family:var(--mono);">{top_prob:.1f}%</div>
                     </div>
@@ -612,13 +589,13 @@ def render_sidebar() -> None:
                 )
 
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("↺ Novo Diagnóstico", use_container_width=True):
+            if st.button("Iniciar Nova Triagem", use_container_width=True):
                 reset_diagnosis()
                 st.rerun()
 
         # ── Model availability ────────────────────────────────────────────────
-        st.markdown("<hr class='section-divider'>", unsafe_allow_html=True)
-        st.markdown('<p class="nav-section-label">Modelos Disponíveis</p>', unsafe_allow_html=True)
+        st.markdown("<hr class='section-divider' style='margin: 20px 0;'>", unsafe_allow_html=True)
+        st.markdown('<p class="nav-section-label">Estado do Sistema</p>', unsafe_allow_html=True)
 
         models = get_available_models()
         if models:
@@ -626,26 +603,26 @@ def render_sidebar() -> None:
                 found = fname in models
                 dot = "dot-ok" if found else "dot-off"
                 lbl = MODEL_LABELS.get(fname, fname)
-                status_txt = "Carregado" if found else "Não encontrado"
+                status_txt = "Online" if found else "Offline"
                 st.markdown(
-                    f'<p style="font-size:0.75rem;color:var(--text2);margin:5px 14px;">'
+                    f'<p style="font-size:0.8rem;color:var(--text2);margin:6px 16px;">'
                     f'<span class="status-dot {dot}"></span>{lbl}'
-                    f'<span style="float:right;font-size:0.68rem;">{status_txt}</span></p>',
+                    f'<span style="float:right;font-size:0.75rem;">{status_txt}</span></p>',
                     unsafe_allow_html=True,
                 )
         else:
             st.markdown(
-                '<p style="font-size:0.75rem;color:var(--danger);margin:5px 14px;">'
-                "Nenhum modelo encontrado</p>",
+                '<p style="font-size:0.8rem;color:var(--danger);margin:6px 16px;">'
+                "Sistemas temporariamente offline.</p>",
                 unsafe_allow_html=True,
             )
 
         # ── Footer ────────────────────────────────────────────────────────────
         st.markdown(
             """
-            <div style="position:fixed;bottom:14px;left:0;width:238px;
-                        text-align:center;color:#243550;font-size:0.68rem;">
-                SNS24 · Protótipo Clínico · v1.0
+            <div style="position:fixed;bottom:16px;left:0;width:240px;
+                        text-align:center;color:var(--text2);font-size:0.7rem;">
+                SNS24 · Triagem Automática
             </div>
             """,
             unsafe_allow_html=True,
@@ -673,23 +650,24 @@ def _phase_setup() -> None:
     st.markdown(
         """
         <div class="page-header">
-            <p class="page-title">⚕ Sistema de Diagnóstico</p>
-            <p class="page-sub">Triagem inteligente baseada em NLP + Machine Learning</p>
+            <p class="page-title">Triagem Digital de Sintomas</p>
+            <p class="page-sub">Sistema de análise rápida para o recomendar ao serviço de saúde mais adequado</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
     if not models:
-        st.error("Nenhum modelo encontrado. Execute `python src/ml_trainer.py` primeiro.")
+        st.error("Sistemas offline no momento. Por favor, contacte a linha 808 24 24 24.")
         return
 
     left, right = st.columns([1, 1], gap="large")
 
     with left:
-        st.markdown('<div class="card card-accent">', unsafe_allow_html=True)
         st.markdown(
-            '<p style="font-weight:700;color:var(--text);margin-bottom:12px;">Escolha o Modelo</p>',
+            '<div style="border-top: 3px solid var(--accent); padding-top: 16px; margin-bottom: 12px;">'
+            '<p style="font-weight:500;color:var(--text);margin:0;">Selecione o Motor de Análise</p>'
+            '</div>',
             unsafe_allow_html=True,
         )
         selected = st.radio(
@@ -701,7 +679,7 @@ def _phase_setup() -> None:
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-        if st.button("Iniciar Diagnóstico →", use_container_width=True):
+        if st.button("Iniciar Avaliação", use_container_width=True):
             st.session_state.selected_model = selected
             st.session_state.phase = "input"
             st.rerun()
@@ -711,19 +689,19 @@ def _phase_setup() -> None:
         st.markdown(
             """
             <div class="card">
-                <p style="font-weight:600;color:var(--text);margin-bottom:10px;">Como funciona?</p>
-                <p style="color:var(--text2);font-size:0.85rem;line-height:1.8;margin:0;">
-                    <b style="color:var(--accent);">①</b> Descreve os sintomas em linguagem natural<br>
-                    <b style="color:var(--accent);">②</b> O NLP extrai os sintomas relevantes<br>
-                    <b style="color:var(--accent);">③</b> O modelo ML calcula hipóteses de diagnóstico<br>
-                    <b style="color:var(--accent);">④</b> Triagem adaptativa refina a confiança<br>
-                    <b style="color:var(--accent);">⑤</b> Diagnóstico final com probabilidades
+                <p style="font-weight:500;color:var(--text);margin-bottom:12px;">Como utilizar?</p>
+                <p style="color:var(--text2);font-size:0.9rem;line-height:1.8;margin:0;">
+                    <b style="color:var(--text);">1.</b> Descreva, pelas suas próprias palavras, o que está a sentir.<br>
+                    <b style="color:var(--text);">2.</b> O nosso sistema vai procurar compreender a sua situação.<br>
+                    <b style="color:var(--text);">3.</b> Avaliaremos cenários possíveis baseados na sua descrição.<br>
+                    <b style="color:var(--text);">4.</b> Faremos algumas perguntas extra para termos mais a certeza.<br>
+                    <b style="color:var(--text);">5.</b> Mostramos-lhe as opções prováveis para decidir os próximos passos.
                 </p>
             </div>
             <div class="warning-box" style="margin-top:0;">
-                <span style="color:var(--warn);font-weight:600;font-size:0.85rem;">⚠ Aviso Clínico</span>
-                <p style="color:var(--text2);font-size:0.8rem;margin:6px 0 0;line-height:1.6;">
-                    Este é um protótipo de apoio à decisão. Não substitui avaliação médica profissional.
+                <span style="color:var(--warn);font-weight:600;font-size:0.85rem;">Em caso de emergência ligue 112</span>
+                <p style="color:var(--text2);font-size:0.85rem;margin:6px 0 0;line-height:1.5;">
+                    Este sistema é um assistente automático de avaliação de sintomas. Não substitui o conselho ou diagnóstico de um médico ou enfermeiro.
                 </p>
             </div>
             """,
@@ -735,13 +713,13 @@ def _phase_setup() -> None:
 def _phase_input() -> None:
     model   = st.session_state.selected_model
     label   = MODEL_LABELS.get(model, model)
-    color   = MODEL_COLORS.get(model, "#00C2A8")
+    color   = MODEL_COLORS.get(model, "var(--accent)")
 
     st.markdown(
         f"""
         <div class="page-header">
-            <p class="page-title">Descrição dos Sintomas</p>
-            <p class="page-sub">Modelo seleccionado: 
+            <p class="page-title">Como o podemos ajudar?</p>
+            <p class="page-sub">Motor ativo: 
                 <b style="color:{color};">{label}</b></p>
         </div>
         """,
@@ -752,12 +730,12 @@ def _phase_input() -> None:
 
     with left:
         text = st.text_area(
-            "Descreva os seus sintomas",
+            "Descreva a condição clínica",
             placeholder=(
-                "Ex: «Tenho febre alta há dois dias, dores de cabeça intensas e muita fadiga. "
-                "Também sinto dores nas articulações, não tenho apetite e tenho estado com náuseas.»"
+                "Ex: «Tenho tido febre alta há dois dias, dores de cabeça muito intensas e sinto-me extremamente cansado. "
+                "Também tenho algumas dores nas articulações, falta de apetite e sinto-me enjoado.»"
             ),
-            height=170,
+            height=180,
             label_visibility="collapsed",
             key="symptom_text_input",
         )
@@ -765,20 +743,19 @@ def _phase_input() -> None:
         c1, _ = st.columns([1, 3])
         with c1:
             st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-            analyse = st.button("Analisar Sintomas →", use_container_width=True)
+            analyse = st.button("Analisar Sintomas", use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
     with right:
         st.markdown(
             """
             <div class="card">
-                <p style="font-weight:600;color:var(--text);font-size:0.85rem;margin-bottom:10px;">Dicas de Descrição</p>
-                <p style="color:var(--text2);font-size:0.78rem;line-height:1.9;margin:0;">
-                    • Use linguagem natural em Português<br>
-                    • Inclua duração e intensidade<br>
-                    • Mencione todos os sintomas<br>
-                    • Termos informais são reconhecidos<br>
-                    • Pode incluir localização da dor
+                <p style="font-weight:500;color:var(--text);font-size:0.9rem;margin-bottom:12px;">Dicas</p>
+                <p style="color:var(--text2);font-size:0.85rem;line-height:1.7;margin:0;">
+                    • Escreva como se estivesse a falar com um médico.<br>
+                    • Tente mencionar há quanto tempo começaram os sintomas.<br>
+                    • Refira a zona do corpo, se for dor.<br>
+                    • O sistema tenta perceber mesmo as palavras mais informais.
                 </p>
             </div>
             """,
@@ -787,18 +764,18 @@ def _phase_input() -> None:
 
     if analyse:
         if not text.strip():
-            st.warning("Por favor, descreva os sintomas antes de continuar.")
+            st.warning("Por favor, descreva o que está a sentir antes de continuar.")
             return
-        with st.spinner("A extrair sintomas via NLP..."):
+        with st.spinner("A analisar os seus sintomas..."):
             try:
                 symptoms = extract_symptoms(text)
             except Exception as exc:
-                st.error(f"Erro no NLP: {exc}")
+                st.error(f"Falha no processamento: {exc}")
                 return
 
         if not symptoms:
             st.error(
-                "Nenhum sintoma reconhecido. Tente usar outros termos ou descreva de forma diferente."
+                "Não conseguimos identificar os sintomas exatos da sua descrição. Tente usar outras palavras."
             )
             return
 
@@ -815,15 +792,14 @@ def _phase_extracted() -> None:
     fv       = st.session_state.feature_vector
     model    = st.session_state.selected_model
 
-    # Run initial prediction (only if not already computed for this phase)
     if not st.session_state.predictions:
-        with st.spinner("A calcular diagnóstico inicial..."):
+        with st.spinner("A avaliar cenários possíveis..."):
             try:
                 preds = predict_top3(fv, model_name=model)
                 st.session_state.predictions = preds
                 st.session_state.top_prob    = preds[0][1]
             except Exception as exc:
-                st.error(f"Erro no modelo: {exc}")
+                st.error(f"Erro de inferência: {exc}")
                 return
 
     preds    = st.session_state.predictions
@@ -832,8 +808,8 @@ def _phase_extracted() -> None:
     st.markdown(
         """
         <div class="page-header">
-            <p class="page-title">Análise Preliminar</p>
-            <p class="page-sub">Sintomas extraídos e hipóteses iniciais</p>
+            <p class="page-title">O que detetámos até agora</p>
+            <p class="page-sub">Sintomas identificados e possíveis cenários</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -841,36 +817,34 @@ def _phase_extracted() -> None:
 
     left, right = st.columns([55, 40], gap="large")
 
-    # ── Left: symptoms + predictions ────────────────────────────────────────
     with left:
         st.markdown(
-            '<p style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;'
-            'color:var(--text2);margin-bottom:8px;">Sintomas Identificados</p>',
+            '<p style="font-size:0.75rem;text-transform:uppercase;font-weight:600;'
+            'color:var(--text2);margin-bottom:12px;">Sintomas Registados</p>',
             unsafe_allow_html=True,
         )
         chips = " ".join(
-            f'<span class="symptom-chip">◆ {s.replace("_"," ").capitalize()}</span>'
+            f'<span class="symptom-chip">{s.replace("_"," ").capitalize()}</span>'
             for s in symptoms
         )
-        st.markdown(f'<div style="margin-bottom:22px;">{chips}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="margin-bottom:28px;">{chips}</div>', unsafe_allow_html=True)
 
         st.markdown(
-            '<p style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;'
-            'color:var(--text2);margin-bottom:8px;">Hipóteses de Diagnóstico</p>',
+            '<p style="font-size:0.75rem;text-transform:uppercase;font-weight:600;'
+            'color:var(--text2);margin-bottom:12px;">Cenários Possíveis</p>',
             unsafe_allow_html=True,
         )
         bar_colors = ["var(--accent)", "var(--accent2)", "var(--text2)"]
         for i, (cond, prob, _) in enumerate(preds):
             bc   = bar_colors[i]
             top  = "top" if i == 0 else ""
-            rank = ["①", "②", "③"][i]
             st.markdown(
                 f"""
                 <div class="diag-card {top}">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <div>
-                            <span style="color:var(--text2);font-size:0.85rem;">{rank}</span>
-                            <span class="diag-name" style="margin-left:8px;">{cond}</span>
+                            <span class="result-rank">{i+1}º</span>
+                            <span class="diag-name">{cond}</span>
                         </div>
                         <span class="diag-prob" style="color:{bc};">{prob:.1f}%</span>
                     </div>
@@ -883,17 +857,16 @@ def _phase_extracted() -> None:
                 unsafe_allow_html=True,
             )
 
-    # ── Right: confidence + actions ───────────────────────────────────────────
     with right:
         conf_cls  = "high" if top_prob >= CONFIDENCE_THRESHOLD else ""
-        conf_icon = "✓ Confiança suficiente" if top_prob >= CONFIDENCE_THRESHOLD else "↑ Pode ser melhorado com triagem"
+        conf_status = "Nível de certeza adequado" if top_prob >= CONFIDENCE_THRESHOLD else "Precisamos de mais informações"
 
         st.markdown(
             f"""
             <div class="conf-display">
-                <div class="conf-label">Confiança do diagnóstico</div>
+                <div class="conf-label">Certeza do Sistema (Top 1)</div>
                 <div class="conf-value {conf_cls}">{top_prob:.1f}%</div>
-                <div class="conf-subtext">{conf_icon}</div>
+                <div class="conf-subtext">{conf_status}</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -901,17 +874,17 @@ def _phase_extracted() -> None:
 
         if top_prob >= CONFIDENCE_THRESHOLD:
             st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-            if st.button("Ver Diagnóstico Final →", use_container_width=True):
+            if st.button("Ver Sugestão de Encaminhamento", use_container_width=True):
                 st.session_state.phase = "results"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
         else:
             st.markdown(
                 f"""
-                <div class="card" style="margin:0 0 12px;">
-                    <p style="color:var(--text2);font-size:0.83rem;line-height:1.65;margin:0;">
-                        Confiança actual: <b style="color:var(--warn);">{top_prob:.1f}%</b>.<br>
-                        A triagem adaptativa faz perguntas específicas para aumentar a precisão do diagnóstico.
+                <div class="card" style="margin:0 0 16px;">
+                    <p style="color:var(--text2);font-size:0.85rem;line-height:1.6;margin:0;">
+                        O sistema regista uma certeza de apenas <b style="color:var(--warn);">{top_prob:.1f}%</b>.<br>
+                        Para podermos recomendar o melhor encaminhamento de forma segura, precisamos de lhe fazer algumas questões rápidas.
                     </p>
                 </div>
                 """,
@@ -919,8 +892,7 @@ def _phase_extracted() -> None:
             )
             c1, c2 = st.columns(2)
             with c1:
-                st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
-                if st.button("Iniciar Triagem →", use_container_width=True):
+                if st.button("Responder a Perguntas", use_container_width=True, type="primary"):
                     qs = get_differentiating_symptoms(
                         fv, model,
                         max_questions=QUESTIONS_PER_ROUND,
@@ -932,9 +904,8 @@ def _phase_extracted() -> None:
                     st.session_state.question_rounds = 0
                     st.session_state.phase           = "questioning"
                     st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
             with c2:
-                if st.button("Resultado Actual →", use_container_width=True):
+                if st.button("Avançar para Sugestão", use_container_width=True):
                     st.session_state.phase = "results"
                     st.rerun()
 
@@ -948,9 +919,8 @@ def _phase_questioning() -> None:
     top_prob  = st.session_state.top_prob
     symptoms  = st.session_state.extracted_symptoms
 
-    # ── All questions answered → recalculate and decide ───────────────────────
     if idx >= len(questions):
-        with st.spinner("A recalcular diagnóstico..."):
+        with st.spinner("A processar as suas respostas..."):
             try:
                 new_preds = predict_top3(
                     st.session_state.feature_vector,
@@ -960,7 +930,7 @@ def _phase_questioning() -> None:
                 st.session_state.top_prob     = new_preds[0][1]
                 st.session_state.question_rounds += 1
             except Exception as exc:
-                st.error(f"Erro: {exc}")
+                st.error(f"Erro no recálculo: {exc}")
                 return
 
         new_top      = st.session_state.top_prob
@@ -983,11 +953,10 @@ def _phase_questioning() -> None:
         st.rerun()
         return
 
-    # ── Show current question ─────────────────────────────────────────────────
     st.markdown(
         f"""
         <div class="page-header">
-            <p class="page-title">Triagem Adaptativa</p>
+            <p class="page-title">Questões de Confirmação</p>
             <p class="page-sub">Ronda {rounds + 1} de {MAX_ROUNDS} — 
                Pergunta {idx + 1} de {len(questions)}</p>
         </div>
@@ -997,22 +966,21 @@ def _phase_questioning() -> None:
 
     left, right = st.columns([55, 45], gap="large")
 
-    # ── Left: live prediction + symptoms ─────────────────────────────────────
     with left:
         conf_cls = "high" if top_prob >= CONFIDENCE_THRESHOLD else ""
         st.markdown(
             f"""
-            <div class="conf-display">
-                <div class="conf-label">Confiança actual</div>
-                <div class="conf-value {conf_cls}">{top_prob:.1f}%</div>
+            <div class="conf-display" style="padding: 16px;">
+                <div class="conf-label" style="margin-bottom:4px;">Certeza Atual</div>
+                <div class="conf-value {conf_cls}" style="font-size:1.8rem;">{top_prob:.1f}%</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
         st.markdown(
-            '<p style="font-size:0.73rem;text-transform:uppercase;letter-spacing:0.1em;'
-            'color:var(--text2);margin:16px 0 8px;">Hipóteses em Curso</p>',
+            '<p style="font-size:0.75rem;text-transform:uppercase;font-weight:600;'
+            'color:var(--text2);margin:20px 0 10px;">A reavaliar cenários em tempo real</p>',
             unsafe_allow_html=True,
         )
         bar_colors = ["var(--accent)", "var(--accent2)", "var(--text2)"]
@@ -1020,13 +988,13 @@ def _phase_questioning() -> None:
             bc = bar_colors[i]
             st.markdown(
                 f"""
-                <div class="diag-card" style="padding:13px 18px;margin-bottom:7px;">
+                <div class="diag-card" style="padding:12px 16px;margin-bottom:8px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:0.88rem;color:var(--text);">{cond}</span>
+                        <span style="font-size:0.9rem;color:var(--text);">{cond}</span>
                         <span style="font-family:var(--mono);color:{bc};
-                              font-weight:700;font-size:0.95rem;">{prob:.1f}%</span>
+                              font-weight:600;font-size:0.95rem;">{prob:.1f}%</span>
                     </div>
-                    <div class="diag-bar-bg" style="margin-top:7px;">
+                    <div class="diag-bar-bg" style="margin-top:8px;">
                         <div class="diag-bar-fill"
                              style="width:{min(prob,100):.1f}%;background:{bc};"></div>
                     </div>
@@ -1035,24 +1003,11 @@ def _phase_questioning() -> None:
                 unsafe_allow_html=True,
             )
 
-        st.markdown(
-            '<p style="font-size:0.73rem;text-transform:uppercase;letter-spacing:0.1em;'
-            'color:var(--text2);margin:16px 0 8px;">Sintomas Base</p>',
-            unsafe_allow_html=True,
-        )
-        chips = " ".join(
-            f'<span class="symptom-chip">◆ {s.replace("_"," ").capitalize()}</span>'
-            for s in symptoms
-        )
-        st.markdown(f"<div>{chips}</div>", unsafe_allow_html=True)
-
-    # ── Right: animated flashcard ─────────────────────────────────────────────
     with right:
         q         = questions[idx]
         q_label   = q.replace("_", " ").capitalize()
         fc_key    = f"fc_{rounds}_{idx}"
 
-        # Build progress dots
         dots = "".join(
             f'<div class="fp-dot {"done" if i < idx else "current" if i == idx else ""}"></div>'
             for i in range(len(questions))
@@ -1061,11 +1016,11 @@ def _phase_questioning() -> None:
         st.markdown(
             f"""
             <div class="flashcard" id="{fc_key}">
-                <div class="flashcard-badge">Triagem &nbsp;·&nbsp; {idx + 1}/{len(questions)}</div>
-                <div class="flashcard-round">Ronda {rounds + 1} — Pergunta de diferenciação</div>
+                <div class="flashcard-badge">Avaliação Rápida &nbsp;·&nbsp; {idx + 1}/{len(questions)}</div>
+                <div class="flashcard-round">Responda para melhorarmos a nossa sugestão</div>
                 <div class="fp-dots">{dots}</div>
                 <div class="flashcard-q">
-                    Está a experienciar<br>
+                    Além do que já indicou, também está a sentir<br>
                     <span class="flashcard-sym">"{q_label}"</span>?
                 </div>
             </div>
@@ -1077,7 +1032,7 @@ def _phase_questioning() -> None:
         b1, b2, _ = st.columns([2, 2, 1])
         with b1:
             st.markdown('<div class="btn-yes">', unsafe_allow_html=True)
-            if st.button("✓  Sim", key=f"yes_{fc_key}", use_container_width=True):
+            if st.button("Sim", key=f"yes_{fc_key}", use_container_width=True):
                 st.session_state.feature_vector[q] = 1
                 st.session_state.asked_symptoms.add(q)
                 st.session_state.current_q_idx += 1
@@ -1085,7 +1040,7 @@ def _phase_questioning() -> None:
             st.markdown("</div>", unsafe_allow_html=True)
         with b2:
             st.markdown('<div class="btn-no">', unsafe_allow_html=True)
-            if st.button("✗  Não", key=f"no_{fc_key}", use_container_width=True):
+            if st.button("Não", key=f"no_{fc_key}", use_container_width=True):
                 st.session_state.asked_symptoms.add(q)
                 st.session_state.current_q_idx += 1
                 st.rerun()
@@ -1100,18 +1055,18 @@ def _phase_results() -> None:
     rounds   = st.session_state.question_rounds
     model    = st.session_state.selected_model
     m_label  = MODEL_LABELS.get(model, model)
-    m_color  = MODEL_COLORS.get(model, "#00C2A8")
+    m_color  = MODEL_COLORS.get(model, "var(--accent)")
 
-    conf_col = "#10B981" if top_prob >= CONFIDENCE_THRESHOLD else "#F5A623"
+    conf_col = "var(--success)" if top_prob >= CONFIDENCE_THRESHOLD else "var(--warn)"
 
     st.markdown(
         f"""
         <div class="page-header">
-            <p class="page-title">Diagnóstico Final</p>
+            <p class="page-title">Resultado da Triagem</p>
             <p class="page-sub">
-                Modelo: <b style="color:{m_color};">{m_label}</b>
-                &nbsp;·&nbsp; Rondas de triagem: <b>{rounds}</b>
-                &nbsp;·&nbsp; Confiança: <b style="color:{conf_col};">{top_prob:.1f}%</b>
+                Motor: <b style="color:{m_color};">{m_label}</b>
+                &nbsp;·&nbsp; Rondas de Perguntas: <b>{rounds}</b>
+                &nbsp;·&nbsp; Certeza Global: <b style="color:{conf_col};">{top_prob:.1f}%</b>
             </p>
         </div>
         """,
@@ -1121,7 +1076,6 @@ def _phase_results() -> None:
     left, right = st.columns([3, 2], gap="large")
 
     with left:
-        medals     = ["🥇", "🥈", "🥉"]
         bar_colors = ["var(--accent)", "var(--accent2)", "var(--accent3)"]
 
         for i, (cond, prob, _) in enumerate(preds):
@@ -1131,13 +1085,13 @@ def _phase_results() -> None:
                 f"""
                 <div class="diag-card {top}">
                     <div style="display:flex;justify-content:space-between;align-items:center;
-                                margin-bottom:10px;">
-                        <div style="display:flex;align-items:center;gap:10px;">
-                            <span class="result-medal">{medals[i]}</span>
-                            <span style="font-size:1.05rem;font-weight:600;">{cond}</span>
+                                margin-bottom:12px;">
+                        <div style="display:flex;align-items:center;">
+                            <span class="result-rank">{i+1}º</span>
+                            <span style="font-size:1.1rem;font-weight:500;">{cond}</span>
                         </div>
-                        <span style="font-family:var(--mono);font-size:1.5rem;
-                                     font-weight:700;color:{bc};">{prob:.1f}%</span>
+                        <span style="font-family:var(--mono);font-size:1.4rem;
+                                     font-weight:600;color:{bc};">{prob:.1f}%</span>
                     </div>
                     <div class="diag-bar-bg">
                         <div class="diag-bar-fill"
@@ -1151,11 +1105,10 @@ def _phase_results() -> None:
         st.markdown(
             """
             <div class="warning-box">
-                <span style="color:var(--warn);font-weight:600;font-size:0.85rem;">⚠ Aviso Importante</span>
-                <p style="color:var(--text2);font-size:0.82rem;margin:7px 0 0;line-height:1.65;">
-                    Este resultado é gerado por um sistema de apoio clínico e
-                    <b>não substitui avaliação médica profissional</b>.
-                    Consulte um médico ou ligue para o <b style="color:var(--text);">SNS 24</b>.
+                <span style="color:var(--warn);font-weight:600;font-size:0.85rem;">Indicação Importante</span>
+                <p style="color:var(--text2);font-size:0.85rem;margin:8px 0 0;line-height:1.6;">
+                    Estes resultados são sugestões geradas automaticamente com base no que descreveu. Este sistema não faz diagnósticos oficiais nem substitui a opinião de um profissional de saúde.<br><br>
+                    Se necessitar de falar com um profissional imediatamente, ligue <b>808 24 24 24</b>.
                 </p>
             </div>
             """,
@@ -1163,7 +1116,6 @@ def _phase_results() -> None:
         )
 
     with right:
-        # Donut chart
         if preds:
             names = [p[0] for p in preds]
             probs = [p[1] for p in preds]
@@ -1171,11 +1123,11 @@ def _phase_results() -> None:
                 go.Pie(
                     labels=names,
                     values=probs,
-                    hole=0.60,
+                    hole=0.65,
                     textinfo="none",
                     marker=dict(
-                        colors=["#00C2A8", "#4F8EF7", "#2A3E6A"],
-                        line=dict(color="#070C18", width=2),
+                        colors=["#38BDF8", "#818CF8", "#34D399"],
+                        line=dict(color="#000000", width=2),
                     ),
                 )
             )
@@ -1184,26 +1136,25 @@ def _phase_results() -> None:
                 plot_bgcolor="rgba(0,0,0,0)",
                 showlegend=False,
                 margin=dict(l=0, r=0, t=0, b=0),
-                height=190,
+                height=220,
                 annotations=[
                     dict(
                         text=f"<b>{probs[0]:.0f}%</b>",
                         x=0.5, y=0.5,
-                        font=dict(size=24, color="#00C2A8", family="JetBrains Mono"),
+                        font=dict(size=26, color="#FAFAFA", family="JetBrains Mono"),
                         showarrow=False,
                     )
                 ],
             )
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
-        # Symptom chips
         st.markdown(
-            '<p style="font-size:0.73rem;text-transform:uppercase;letter-spacing:0.1em;'
-            'color:var(--text2);margin-bottom:8px;">Sintomas detectados</p>',
+            '<p style="font-size:0.75rem;text-transform:uppercase;font-weight:600;'
+            'color:var(--text2);margin:20px 0 10px;">Sintomas Finalizados</p>',
             unsafe_allow_html=True,
         )
         chips = " ".join(
-            f'<span class="symptom-chip">◆ {s.replace("_"," ").capitalize()}</span>'
+            f'<span class="symptom-chip">{s.replace("_"," ").capitalize()}</span>'
             for s in symptoms
         )
         st.markdown(f"<div>{chips}</div>", unsafe_allow_html=True)
@@ -1216,20 +1167,20 @@ def render_benchmarks() -> None:
     st.markdown(
         """
         <div class="page-header">
-            <p class="page-title">📊 Benchmarks dos Modelos</p>
+            <p class="page-title">Métricas do Sistema</p>
             <p class="page-sub">
-                Comparação de desempenho — Random Forest · Gradient Boosting · Logistic Regression
+                Transparência dos motores de triagem usados (informação técnica)
             </p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    with st.spinner("A avaliar modelos no conjunto de teste..."):
+    with st.spinner("A gerar grelha de métricas..."):
         results = evaluate_all_models()
 
     if "_error" in results:
-        st.error(f"Erro ao carregar dados de avaliação: {results['_error']}")
+        st.error(f"Falha no processamento da avaliação: {results['_error']}")
         return
 
     valid = {k: v for k, v in results.items() if "_error" not in v}
@@ -1237,10 +1188,10 @@ def render_benchmarks() -> None:
 
     if errored:
         for fname, res in errored.items():
-            st.warning(f"{MODEL_LABELS.get(fname, fname)}: {res['_error']}")
+            st.warning(f"Inconsistência identificada no modelo {MODEL_LABELS.get(fname, fname)}: {res['_error']}")
 
     if not valid:
-        st.error("Nenhum modelo foi avaliado com sucesso.")
+        st.error("Dados de avaliação insuficientes.")
         return
 
     metrics_keys   = ["accuracy", "f1", "recall", "precision"]
@@ -1251,7 +1202,7 @@ def render_benchmarks() -> None:
 
     # ── Per-model metric cards ────────────────────────────────────────────────
     for fname, res in valid.items():
-        color = MODEL_COLORS.get(fname, "#00C2A8")
+        color = MODEL_COLORS.get(fname, "#38BDF8")
         lbl   = res["label"]
         st.markdown(
             f"""
@@ -1278,7 +1229,7 @@ def render_benchmarks() -> None:
 
     # ── Grouped comparison bar chart ──────────────────────────────────────────
     st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-    st.markdown('<p class="section-title">Comparação Visual de Métricas</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">Análise Comparativa de Desempenho Global</p>', unsafe_allow_html=True)
 
     fig = go.Figure()
     for fname, res in valid.items():
@@ -1287,53 +1238,95 @@ def render_benchmarks() -> None:
                 name=res["label"],
                 x=[metrics_labels[m] for m in metrics_keys],
                 y=[res[m] for m in metrics_keys],
-                marker_color=MODEL_COLORS.get(fname, "#ccc"),
+                marker_color=MODEL_COLORS.get(fname, "#cccccc"),
                 marker_line_width=0,
                 text=[f"{res[m]:.3f}" for m in metrics_keys],
                 textposition="outside",
-                textfont=dict(family="JetBrains Mono", size=10, color="#DDE8FF"),
+                textfont=dict(family="JetBrains Mono", size=11, color="#FAFAFA"),
             )
         )
     fig.update_layout(
         barmode="group",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Plus Jakarta Sans", color="#6878A0"),
+        font=dict(family="Inter", color="#A3A3A3"),
         xaxis=dict(
             showgrid=False,
-            tickfont=dict(color="#DDE8FF", size=11),
-            linecolor="#1C2E4A",
+            tickfont=dict(color="#A3A3A3", size=12),
+            linecolor="#262626",
         ),
         yaxis=dict(
-            range=[0, 1.12],
-            showgrid=True, gridcolor="#1C2E4A",
-            tickfont=dict(color="#6878A0"),
+            range=[0, 1.15],
+            showgrid=True, gridcolor="#171717",
+            tickfont=dict(color="#A3A3A3"),
             tickformat=".0%",
         ),
         legend=dict(
-            orientation="h", x=0.5, xanchor="center", y=1.06,
-            font=dict(color="#DDE8FF", size=11),
+            orientation="h", x=0.5, xanchor="center", y=1.1,
+            font=dict(color="#FAFAFA", size=12),
             bgcolor="rgba(0,0,0,0)",
         ),
         margin=dict(l=40, r=40, t=50, b=40),
-        height=340,
+        height=360,
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
+    # ── New Addition: F1-Score Distribution (Box Plot) ────────────────────────
+    st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">Distribuição de F1-Score por Condição</p>', unsafe_allow_html=True)
+    
+    box_fig = go.Figure()
+    for fname, res in valid.items():
+        if "per_class_f1" in res:
+            box_fig.add_trace(go.Box(
+                y=res["per_class_f1"],
+                name=res["label"],
+                marker_color=MODEL_COLORS.get(fname, "#cccccc"),
+                boxpoints='all',
+                jitter=0.4,
+                pointpos=-1.8,
+                line=dict(width=1),
+            ))
+            
+    box_fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Inter", color="#A3A3A3"),
+        yaxis=dict(
+            title="F1-Score",
+            showgrid=True, gridcolor="#171717",
+            zeroline=False,
+            tickfont=dict(color="#A3A3A3")
+        ),
+        xaxis=dict(
+            showgrid=False,
+            tickfont=dict(color="#FAFAFA", size=12)
+        ),
+        showlegend=False,
+        margin=dict(l=50, r=20, t=20, b=40),
+        height=380,
+    )
+    st.plotly_chart(box_fig, use_container_width=True, config={"displayModeBar": False})
+
     # ── Radar chart ───────────────────────────────────────────────────────────
     st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-    st.markdown('<p class="section-title">Gráfico Radar — Perfil de Cada Modelo</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">Espectro de Performance Multidimensional</p>', unsafe_allow_html=True)
 
     radar_fig = go.Figure()
     categories = [metrics_labels[m] for m in metrics_keys] + [metrics_labels[metrics_keys[0]]]
     for fname, res in valid.items():
         vals = [res[m] for m in metrics_keys] + [res[metrics_keys[0]]]
+        hex_color = MODEL_COLORS.get(fname, "#cccccc")
+        h = hex_color.lstrip("#")
+        if len(h) == 3:
+            h = "".join(c*2 for c in h)
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
         radar_fig.add_trace(
             go.Scatterpolar(
                 r=vals, theta=categories,
                 fill="toself", name=res["label"],
-                line=dict(color=MODEL_COLORS.get(fname, "#ccc"), width=2),
-                fillcolor=MODEL_COLORS.get(fname, "#ccc").replace("#", "rgba(") + ",0.08)",
+                line=dict(color=hex_color, width=1.5),
+                fillcolor=f"rgba({r},{g},{b},0.05)",
             )
         )
     radar_fig.update_layout(
@@ -1341,29 +1334,29 @@ def render_benchmarks() -> None:
             bgcolor="rgba(0,0,0,0)",
             radialaxis=dict(
                 visible=True, range=[0, 1],
-                tickfont=dict(color="#6878A0", size=9),
-                gridcolor="#1C2E4A", linecolor="#1C2E4A",
+                tickfont=dict(color="#A3A3A3", size=10),
+                gridcolor="#171717", linecolor="#171717",
             ),
             angularaxis=dict(
-                tickfont=dict(color="#DDE8FF", size=10),
-                gridcolor="#1C2E4A", linecolor="#1C2E4A",
+                tickfont=dict(color="#FAFAFA", size=11),
+                gridcolor="#171717", linecolor="#171717",
             ),
         ),
         paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Plus Jakarta Sans", color="#6878A0"),
+        font=dict(family="Inter", color="#A3A3A3"),
         legend=dict(
-            orientation="h", x=0.5, xanchor="center", y=-0.1,
-            font=dict(color="#DDE8FF", size=11),
+            orientation="h", x=0.5, xanchor="center", y=-0.15,
+            font=dict(color="#FAFAFA", size=12),
             bgcolor="rgba(0,0,0,0)",
         ),
-        margin=dict(l=40, r=40, t=20, b=60),
-        height=360,
+        margin=dict(l=40, r=40, t=20, b=70),
+        height=380,
     )
     st.plotly_chart(radar_fig, use_container_width=True, config={"displayModeBar": False})
 
     # ── Confusion matrices ────────────────────────────────────────────────────
     st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-    st.markdown('<p class="section-title">Matrizes de Confusão (Normalizadas)</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">Matriz de Confusão Normalizada (Top 30 Condições)</p>', unsafe_allow_html=True)
 
     valid_cm = [(fn, r) for fn, r in valid.items() if "cm" in r]
     if valid_cm:
@@ -1373,22 +1366,20 @@ def render_benchmarks() -> None:
                 cm      = res["cm"]
                 classes = res["classes"]
 
-                # Limit to top-30 classes by test frequency to keep matrix readable
                 class_counts = cm.sum(axis=1)
                 top_idx      = np.argsort(class_counts)[::-1][:30]
                 cm_sub       = cm[np.ix_(top_idx, top_idx)]
                 cls_sub      = [classes[i] for i in top_idx]
 
-                # Normalise rows
                 row_sums = cm_sub.sum(axis=1, keepdims=True).astype(float)
                 cm_norm  = np.divide(cm_sub, row_sums, where=row_sums > 0)
 
-                short_cls = [c[:14] + "…" if len(c) > 14 else c for c in cls_sub]
+                short_cls = [c[:16] + "…" if len(c) > 16 else c for c in cls_sub]
 
                 fig = go.Figure(
                     go.Heatmap(
                         z=cm_norm, x=short_cls, y=short_cls,
-                        colorscale=[[0, "#0F1929"], [0.5, "#006E62"], [1, "#00C2A8"]],
+                        colorscale=[[0, "#000000"], [0.5, "#1E40AF"], [1, "#38BDF8"]],
                         showscale=False,
                         hovertemplate="Real: %{y}<br>Previsto: %{x}<br>Score: %{z:.2f}<extra></extra>",
                     )
@@ -1396,65 +1387,21 @@ def render_benchmarks() -> None:
                 fig.update_layout(
                     title=dict(
                         text=res["label"],
-                        font=dict(size=11, color="#DDE8FF", family="Plus Jakarta Sans"),
+                        font=dict(size=12, color="#FAFAFA", family="Inter"),
                     ),
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(0,0,0,0)",
-                    font=dict(family="Plus Jakarta Sans", color="#6878A0", size=7),
-                    xaxis=dict(showgrid=False, tickangle=45, tickfont=dict(size=7)),
-                    yaxis=dict(showgrid=False, tickfont=dict(size=7), autorange="reversed"),
-                    margin=dict(l=10, r=10, t=40, b=90),
-                    height=420,
+                    font=dict(family="Inter", color="#A3A3A3", size=8),
+                    xaxis=dict(showgrid=False, tickangle=45, tickfont=dict(size=8)),
+                    yaxis=dict(showgrid=False, tickfont=dict(size=8), autorange="reversed"),
+                    margin=dict(l=10, r=10, t=40, b=100),
+                    height=450,
                 )
                 st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
-    # ── Per-class F1 heatmap ──────────────────────────────────────────────────
-    st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-    st.markdown('<p class="section-title">F1-Score por Classe (Top 25)</p>', unsafe_allow_html=True)
-
-    valid_f1 = [(fn, r) for fn, r in valid.items() if "per_class_f1" in r]
-    if valid_f1:
-        classes_ref = valid_f1[0][1]["classes"]
-        f1_mat      = np.column_stack([r["per_class_f1"] for _, r in valid_f1])
-        model_lbls  = [r["label"] for _, r in valid_f1]
-
-        # Sort by mean F1 descending, keep top 25
-        mean_f1  = f1_mat.mean(axis=1)
-        top_idx  = np.argsort(mean_f1)[::-1][:25]
-        f1_top   = f1_mat[top_idx]
-        cls_top  = [classes_ref[i] for i in top_idx]
-
-        fig = go.Figure(
-            go.Heatmap(
-                z=f1_top.T, x=cls_top, y=model_lbls,
-                colorscale=[[0, "#0F1929"], [0.4, "#1F4E78"], [1, "#00C2A8"]],
-                showscale=True,
-                zmin=0, zmax=1,
-                colorbar=dict(
-                    tickfont=dict(color="#6878A0", size=9),
-                    outlinewidth=0,
-                    len=0.8,
-                ),
-                hovertemplate="Classe: %{x}<br>Modelo: %{y}<br>F1: %{z:.3f}<extra></extra>",
-            )
-        )
-        fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Plus Jakarta Sans", color="#6878A0"),
-            xaxis=dict(
-                showgrid=False, tickangle=45,
-                tickfont=dict(size=9, color="#DDE8FF"),
-            ),
-            yaxis=dict(showgrid=False, tickfont=dict(size=11, color="#DDE8FF")),
-            margin=dict(l=20, r=60, t=20, b=130),
-            height=max(220, len(valid_f1) * 70 + 180),
-        )
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-
     # ── Summary comparison table ──────────────────────────────────────────────
     st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-    st.markdown('<p class="section-title">Tabela Resumo</p>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">Quadro Resumo de Métricas</p>', unsafe_allow_html=True)
 
     rows = []
     for fname, res in valid.items():
@@ -1482,9 +1429,9 @@ def main() -> None:
 
     if not _IMPORTS_OK:
         st.error(
-            f"**Erro de importação:** `{_IMPORT_ERR}`\n\n"
-            "Verifique que a estrutura de pastas `src/` está correcta e que as "
-            "dependências estão instaladas (`pip install -r requirements.txt`)."
+            f"**Falha de importação:** `{_IMPORT_ERR}`\n\n"
+            "Valide a integridade do pacote `src/` e assegure a instalação das "
+            "dependências do ambiente virtual (`pip install -r requirements.txt`)."
         )
         st.stop()
 
