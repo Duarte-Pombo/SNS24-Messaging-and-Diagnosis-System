@@ -15,6 +15,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+from src.triage_logic import determine_urgency
+
 warnings.filterwarnings("ignore")
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
@@ -894,18 +896,22 @@ def _phase_extracted() -> None:
             )
             c1, c2 = st.columns(2)
             with c1:
-                if st.button("Responder a Perguntas", use_container_width=True, type="primary"):
-                    qs = get_differentiating_symptoms(
-                        fv, model,
-                        max_questions=QUESTIONS_PER_ROUND,
-                        asked_symptoms=set(),
-                    )
-                    st.session_state.questions       = qs
-                    st.session_state.current_q_idx   = 0
-                    st.session_state.asked_symptoms  = set()
-                    st.session_state.question_rounds = 0
-                    st.session_state.phase           = "questioning"
-                    st.rerun()
+                qs = get_differentiating_symptoms(
+                    fv, model,
+                    max_questions=QUESTIONS_PER_ROUND,
+                    asked_symptoms=set(),
+                )
+
+                if not qs:
+                    st.info("O modelo já alcançou a confiança máxima possível. Não há mais perguntas.")
+                else:
+                    if st.button("Responder a Perguntas", use_container_width=True, type="primary"):
+                        st.session_state.questions = qs
+                        st.session_state.current_q_idx = 0
+                        st.session_state.asked_symptoms = set()
+                        st.session_state.question_rounds = 0
+                        st.session_state.phase = "questioning"
+                        st.rerun()
             with c2:
                 if st.button("Avançar para Sugestão", use_container_width=True):
                     st.session_state.phase = "results"
@@ -1049,15 +1055,14 @@ def _phase_questioning() -> None:
             st.markdown("</div>", unsafe_allow_html=True)
 
 
-# ── Phase 4: final results ──────────────────────────────────────────────────────
 def _phase_results() -> None:
-    preds    = st.session_state.predictions
+    preds = st.session_state.predictions
     symptoms = st.session_state.extracted_symptoms
     top_prob = st.session_state.top_prob
-    rounds   = st.session_state.question_rounds
-    model    = st.session_state.selected_model
-    m_label  = MODEL_LABELS.get(model, model)
-    m_color  = MODEL_COLORS.get(model, "var(--accent)")
+    rounds = st.session_state.question_rounds
+    model = st.session_state.selected_model
+    m_label = MODEL_LABELS.get(model, model)
+    m_color = MODEL_COLORS.get(model, "var(--accent)")
 
     conf_col = "var(--success)" if top_prob >= CONFIDENCE_THRESHOLD else "var(--warn)"
 
@@ -1078,26 +1083,32 @@ def _phase_results() -> None:
     left, right = st.columns([3, 2], gap="large")
 
     with left:
-        bar_colors = ["var(--accent)", "var(--accent2)", "var(--accent3)"]
-
         for i, (cond, prob, _) in enumerate(preds):
-            top  = "top" if i == 0 else ""
-            bc   = bar_colors[i]
+            top = "top" if i == 0 else ""
+
+            # 1. Use YOUR function to get the level and color!
+            u_level, bc = determine_urgency(cond)
+
             st.markdown(
                 f"""
-                <div class="diag-card {top}">
+                <div class="diag-card {top}" style="border-left: 4px solid {bc};">
                     <div style="display:flex;justify-content:space-between;align-items:center;
                                 margin-bottom:12px;">
-                        <div style="display:flex;align-items:center;">
-                            <span class="result-rank">{i+1}º</span>
-                            <span style="font-size:1.1rem;font-weight:500;">{cond}</span>
+                        <div style="display:flex;flex-direction:column;">
+                            <div style="display:flex;align-items:center;">
+                                <span class="result-rank">{i + 1}º</span>
+                                <span style="font-size:1.1rem;font-weight:500;">{cond}</span>
+                            </div>
+                            <span style="font-size:0.85rem;font-weight:600;color:{bc};margin-top:4px;">
+                                Nível de Urgência (Manchester): {u_level}
+                            </span>
                         </div>
                         <span style="font-family:var(--mono);font-size:1.4rem;
                                      font-weight:600;color:{bc};">{prob:.1f}%</span>
                     </div>
                     <div class="diag-bar-bg">
                         <div class="diag-bar-fill"
-                             style="width:{min(prob,100):.1f}%;background:{bc};"></div>
+                             style="width:{min(prob, 100):.1f}%;background:{bc};"></div>
                     </div>
                 </div>
                 """,
@@ -1121,14 +1132,18 @@ def _phase_results() -> None:
         if preds:
             names = [p[0] for p in preds]
             probs = [p[1] for p in preds]
-            fig   = go.Figure(
+
+            # 2. Use YOUR function to extract just the color (index 1 of the tuple) for the pie chart!
+            pie_colors = [determine_urgency(name)[1] for name in names]
+
+            fig = go.Figure(
                 go.Pie(
                     labels=names,
                     values=probs,
                     hole=0.65,
                     textinfo="none",
                     marker=dict(
-                        colors=["#38BDF8", "#818CF8", "#34D399"],
+                        colors=pie_colors,
                         line=dict(color="#000000", width=2),
                     ),
                 )
@@ -1156,7 +1171,7 @@ def _phase_results() -> None:
             unsafe_allow_html=True,
         )
         chips = " ".join(
-            f'<span class="symptom-chip">{s.replace("_"," ").capitalize()}</span>'
+            f'<span class="symptom-chip">{s.replace("_", " ").capitalize()}</span>'
             for s in symptoms
         )
         st.markdown(f"<div>{chips}</div>", unsafe_allow_html=True)
@@ -1167,7 +1182,7 @@ def _phase_results() -> None:
                 <p class="section-title" style="margin-bottom: 4px;">Unidades de Saúde Recomendadas</p>
                 <p style="color:var(--text2);font-size:0.85rem;">Partilhe a sua localização para encontrarmos a unidade mais adequada para o seu diagnóstico.</p>
             </div>
-            """, 
+            """,
             unsafe_allow_html=True
         )
 
@@ -1178,14 +1193,13 @@ def _phase_results() -> None:
             user_lat = location['latitude']
             user_lon = location['longitude']
             top_condition = preds[0][0] if preds else ""
-        
+
             with st.spinner("A procurar unidades na sua zona..."):
                 facilities = get_nearest_facilities(user_lat, user_lon, top_condition)
-            
+
             if facilities:
                 st.markdown('<div style="margin-top: 20px;">', unsafe_allow_html=True)
                 for fac in facilities:
-                    # Reuse your existing pure-black theme classes
                     st.markdown(
                         f"""
                         <div class="diag-card" style="border-left: 3px solid var(--accent);">
@@ -1210,7 +1224,6 @@ def _phase_results() -> None:
                 st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.warning("Não foram encontradas unidades de saúde compatíveis na sua zona.")
-
 
 # ══════════════════════════════════════════════════════════════════════════════
 # BENCHMARKS PAGE

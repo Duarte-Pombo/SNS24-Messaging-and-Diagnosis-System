@@ -199,12 +199,14 @@ def get_differentiating_symptoms(feature_vector, model_name, max_questions=10, a
         confidence_gain = new_confidence - base_confidence
         
         # Only consider symptoms that boost confidence by a meaningful margin (e.g., > 5%)
-        if confidence_gain > 0.05: 
+        if confidence_gain > 0.03:
             candidate_impacts.append((sym, confidence_gain))
             
     # Sort by highest confidence gain (the "silver bullet" questions)
     candidate_impacts.sort(key=lambda x: x[1], reverse=True)
-    
+    if not candidate_impacts:
+        return []
+
     return [sym for sym, gain in candidate_impacts[:max_questions]]
 
 def explain(feature_vector, top_n=3, model_name="random_forest.pkl"):
