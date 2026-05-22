@@ -31,13 +31,13 @@ def generate_comparison_table():
 
     comparison_df = comparison_df.rename(columns={
         'Mean_F1_Score': 'Peak F1-Score',
-        'Std_Dev_F1': 'Std Dev (Stability)',
-        'Mean_Fit_Time_sec': 'Training Time (sec)'
+        'Std_Dev_F1': 'Std Dev',
+        'Mean_Fit_Time_sec': 'Training Time (s)'
     })
 
     comparison_df['Peak F1-Score'] = pd.to_numeric(comparison_df['Peak F1-Score'], errors='coerce').round(4)
-    comparison_df['Std Dev (Stability)'] = pd.to_numeric(comparison_df['Std Dev (Stability)'], errors='coerce').round(4)
-    comparison_df['Training Time (sec)'] = pd.to_numeric(comparison_df['Training Time (sec)'], errors='coerce').round(2)
+    comparison_df['Std Dev'] = pd.to_numeric(comparison_df['Std Dev'], errors='coerce').round(4)
+    comparison_df['Training Time (s)'] = pd.to_numeric(comparison_df['Training Time (s)'], errors='coerce').round(2)
 
     print("\n### Ultimate Model Comparison (Rank 1 Only)")
     print(comparison_df.to_markdown(index=False))
