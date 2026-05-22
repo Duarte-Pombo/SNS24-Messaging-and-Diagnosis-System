@@ -74,17 +74,37 @@ def split_data(X, y_encoded):
     return train_test_split(X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded)
 
 def train_random_forest(X_train, y_train):
-    clf = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+    # Optimized parameters from Grid Search (Rank 1)
+    clf = RandomForestClassifier(
+        n_estimators=200,
+        max_depth=None,
+        min_samples_split=2,
+        random_state=42,
+        n_jobs=-1
+    )
     clf.fit(X_train, y_train)
     return clf
 
 def train_gradient_boosting(X_train, y_train):
-    clf = GradientBoostingClassifier(n_estimators=100, random_state=42)
+    # Optimized parameters from Grid Search (Rank 1)
+    clf = GradientBoostingClassifier(
+        n_estimators=100,
+        learning_rate=0.1,
+        max_depth=3,
+        random_state=42
+    )
     clf.fit(X_train, y_train)
     return clf
 
 def train_logistic_regression(X_train, y_train):
-    clf = LogisticRegression(max_iter=2000, random_state=42, n_jobs=-1)
+    # Optimized parameters from Grid Search (Rank 1)
+    clf = LogisticRegression(
+        C=0.1,
+        solver='saga',
+        max_iter=5000,
+        random_state=42,
+        n_jobs=-1
+    )
     clf.fit(X_train, y_train)
     return clf
 
