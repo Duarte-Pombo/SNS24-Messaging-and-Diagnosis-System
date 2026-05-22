@@ -31,6 +31,8 @@ st.set_page_config(
 # ── Lazy imports after path setup ─────────────────────────────────────────────
 try:
     from src.nlp_extractor import extract_symptoms
+    from src.routing import get_nearest_facilities
+    from streamlit_geolocation import streamlit_geolocation
     from src.ml_trainer import (
         MODEL_DIR,
         encode_labels,
@@ -1158,6 +1160,56 @@ def _phase_results() -> None:
             for s in symptoms
         )
         st.markdown(f"<div>{chips}</div>", unsafe_allow_html=True)
+        st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div style="margin-bottom: 16px;">
+                <p class="section-title" style="margin-bottom: 4px;">Unidades de Saúde Recomendadas</p>
+                <p style="color:var(--text2);font-size:0.85rem;">Partilhe a sua localização para encontrarmos a unidade mais adequada para o seu diagnóstico.</p>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
+
+        # Initialize geolocation widget
+        location = streamlit_geolocation()
+
+        if location and location.get('latitude') and location.get('longitude'):
+            user_lat = location['latitude']
+            user_lon = location['longitude']
+            top_condition = preds[0][0] if preds else ""
+        
+            with st.spinner("A procurar unidades na sua zona..."):
+                facilities = get_nearest_facilities(user_lat, user_lon, top_condition)
+            
+            if facilities:
+                st.markdown('<div style="margin-top: 20px;">', unsafe_allow_html=True)
+                for fac in facilities:
+                    # Reuse your existing pure-black theme classes
+                    st.markdown(
+                        f"""
+                        <div class="diag-card" style="border-left: 3px solid var(--accent);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div>
+                                    <span class="diag-name">{fac.get('Hospital Name', 'Unidade de Saúde')}</span><br>
+                                    <span style="font-size:0.8rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;">
+                                        {fac.get('Care Type', 'Clínica')} • {fac.get('Specialty Tags', 'Geral')}
+                                    </span>
+                                </div>
+                                <div style="text-align:right;">
+                                    <span style="font-family:var(--mono);font-size:1.4rem;font-weight:600;color:var(--text);">
+                                        {fac.get('distance_km', 0):.1f}
+                                    </span>
+                                    <span style="font-size:0.8rem;color:var(--text2);">km</span>
+                                </div>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                st.markdown('</div>', unsafe_allow_html=True)
+            else:
+                st.warning("Não foram encontradas unidades de saúde compatíveis na sua zona.")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
