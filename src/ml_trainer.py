@@ -126,6 +126,67 @@ def predict_top3(feature_vector, model_name="random_forest.pkl"):
 
     return [(le.classes_[i], proba[i] * 100, 1) for i in top3_idx]
 
+def get_differentiating_symptoms(feature_vector, model_name, max_questions=10, asked_symptoms=None):
+    """
+    Simulates turning on unobserved symptoms to find which ones 
+    create the highest overall confidence for ANY single disease.
+    """
+    # 1. INITIALIZE THE SET IF NONE
+    if asked_symptoms is None:
+        asked_symptoms = set()
+
+    clf, le, features = load_model(model_name)
+    
+    # Establish the baseline confidence
+    base_row = {f: 0 for f in features}
+    base_row.update(feature_vector)
+    
+    # Recalculate severity for baseline
+    if 'total_severity' in features:
+        try:
+            severity_df = pd.read_csv(SEVERITY_PATH)
+            severity_map = dict(zip(severity_df['Symptom'], severity_df['weight']))
+            base_row['total_severity'] = sum(severity_map.get(k, 1) for k, v in feature_vector.items() if v == 1 and k != 'total_severity')
+        except Exception:
+            base_row['total_severity'] = 0
+
+    X_base = pd.DataFrame([base_row])[features]
+    base_proba = clf.predict_proba(X_base)[0]
+    
+    # The highest probability of ANY disease in our baseline state
+    base_confidence = base_proba.max() 
+    
+    # Test each unused symptom for its potential to boost confidence
+    candidate_impacts = []
+    
+    for sym in features:
+        if sym == 'total_severity' or feature_vector.get(sym, 0) == 1 or sym in asked_symptoms:
+            continue
+            
+        test_row = base_row.copy()
+        test_row[sym] = 1
+        
+        if 'total_severity' in features:
+            test_row['total_severity'] += 1 
+            
+        X_test = pd.DataFrame([test_row])[features]
+        test_proba = clf.predict_proba(X_test)[0]
+        
+        # What is the highest probability any disease gets if this symptom is True?
+        new_confidence = test_proba.max()
+        
+        # How much did this symptom increase our absolute confidence?
+        confidence_gain = new_confidence - base_confidence
+        
+        # Only consider symptoms that boost confidence by a meaningful margin (e.g., > 5%)
+        if confidence_gain > 0.05: 
+            candidate_impacts.append((sym, confidence_gain))
+            
+    # Sort by highest confidence gain (the "silver bullet" questions)
+    candidate_impacts.sort(key=lambda x: x[1], reverse=True)
+    
+    return [sym for sym, gain in candidate_impacts[:max_questions]]
+
 def explain(feature_vector, top_n=3, model_name="random_forest.pkl"):
     clf, _, features = load_model(model_name)
 
@@ -155,19 +216,9 @@ def evaluate(clf, le, X_test, y_test, model_name="Model"):
     print()
 
 if __name__ == "__main__":
-    # Setup Argument Parser
-    parser = argparse.ArgumentParser(description="Train ML models on clean, noisy, or combined symptom datasets.")
-    parser.add_argument(
-        "--dataset", 
-        type=str, 
-        choices=["clean", "low_noise", "high_noise", "combined"], 
-        default="clean",
-        help="Select which dataset variant to train on."
-    )
-    args = parser.parse_args()
+    print("--- Starting training pipeline using 'combined' dataset ---")
 
-    print(f"--- Starting training pipeline using '{args.dataset}' dataset ---")
-    X, y, features = load_data(args.dataset)
+    X, y, features = load_data("combined")
 
     print("Encoding labels...")
     y_encoded, le = encode_labels(y)
@@ -175,20 +226,17 @@ if __name__ == "__main__":
     print("Splitting data...")
     X_train, X_test, y_train, y_test = split_data(X, y_encoded)
 
-    # Determine file suffix to avoid overwriting models unless intended
-    suffix = "" if args.dataset == "clean" else f"_{args.dataset}"
-
     print("Training Random Forest...")
     rf_clf = train_random_forest(X_train, y_train)
     evaluate(rf_clf, le, X_test, y_test, "Random Forest")
-    save_model(rf_clf, le, features, f"random_forest{suffix}.pkl")
+    save_model(rf_clf, le, features, f"random_forest.pkl")
 
     print("Training Gradient Boosting...")
     gb_clf = train_gradient_boosting(X_train, y_train)
     evaluate(gb_clf, le, X_test, y_test, "Gradient Boosting")
-    save_model(gb_clf, le, features, f"gradient_boosting{suffix}.pkl")
+    save_model(gb_clf, le, features, f"gradient_boosting.pkl")
 
     print("Training Logistic Regression...")
     lr_clf = train_logistic_regression(X_train, y_train)
     evaluate(lr_clf, le, X_test, y_test, "Logistic Regression")
-    save_model(lr_clf, le, features, f"logistic_regression{suffix}.pkl")
+    save_model(lr_clf, le, features, f"logistic_regression.pkl")
