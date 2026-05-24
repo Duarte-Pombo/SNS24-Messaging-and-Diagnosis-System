@@ -670,7 +670,7 @@ def _phase_setup() -> None:
     with left:
         st.markdown(
             '<div style="border-top: 3px solid var(--accent); padding-top: 16px; margin-bottom: 12px;">'
-            '<p style="font-weight:500;color:var(--text);margin:0;">Selecione o Motor de Análise</p>'
+            '<p style="font-weight:500;color:var(--text);margin:0;">Selecione o Motor de Análise (Motor recomendado: Logist Regression)</p>'
             '</div>',
             unsafe_allow_html=True,
         )
@@ -698,14 +698,14 @@ def _phase_setup() -> None:
                     <b style="color:var(--text);">1.</b> Descreva, pelas suas próprias palavras, o que está a sentir.<br>
                     <b style="color:var(--text);">2.</b> O nosso sistema vai procurar compreender a sua situação.<br>
                     <b style="color:var(--text);">3.</b> Avaliaremos cenários possíveis baseados na sua descrição.<br>
-                    <b style="color:var(--text);">4.</b> Faremos algumas perguntas extra para termos mais a certeza.<br>
-                    <b style="color:var(--text);">5.</b> Mostramos-lhe as opções prováveis para decidir os próximos passos.
+                    <b style="color:var(--text);">4.</b> Em caso de incerteza, um pequeno questionário será proposto para um diagonóstico mais preciso.<br>
+                    <b style="color:var(--text);">5.</b> As 3 doenças mais prováveis serão apresentadas para poder tomar a decisão mais adequada.
                 </p>
             </div>
             <div class="warning-box" style="margin-top:0;">
                 <span style="color:var(--warn);font-weight:600;font-size:0.85rem;">Em caso de emergência ligue 112</span>
                 <p style="color:var(--text2);font-size:0.85rem;margin:6px 0 0;line-height:1.5;">
-                    Este sistema é um assistente automático de avaliação de sintomas. Não substitui o conselho ou diagnóstico de um médico ou enfermeiro.
+                    Este sistema é um assistente automático de avaliação de sintomas. Não substitui o diagnóstico e aconselhamento de um médico ou enfermeiro.
                 </p>
             </div>
             """,
@@ -736,7 +736,7 @@ def _phase_input() -> None:
         text = st.text_area(
             "Descreva a condição clínica",
             placeholder=(
-                "Ex: «Tenho tido febre alta há dois dias, dores de cabeça muito intensas e sinto-me extremamente cansado. "
+                "Ex: «Tenho tido febre alta, dores de cabeça muito intensas e sinto-me extremamente cansado. "
                 "Também tenho algumas dores nas articulações, falta de apetite e sinto-me enjoado.»"
             ),
             height=180,
@@ -757,8 +757,7 @@ def _phase_input() -> None:
                 <p style="font-weight:500;color:var(--text);font-size:0.9rem;margin-bottom:12px;">Dicas</p>
                 <p style="color:var(--text2);font-size:0.85rem;line-height:1.7;margin:0;">
                     • Escreva como se estivesse a falar com um médico.<br>
-                    • Tente mencionar há quanto tempo começaram os sintomas.<br>
-                    • Refira a zona do corpo, se for dor.<br>
+                    • Em caso de dor, refira a zona do corpo, da forma mais precisa possível.<br>
                     • O sistema tenta perceber mesmo as palavras mais informais.
                 </p>
             </div>
@@ -1057,7 +1056,7 @@ def _phase_questioning() -> None:
 
 def _phase_results() -> None:
     preds = st.session_state.predictions
-    symptoms = st.session_state.extracted_symptoms
+    symptoms = [s for s, val in st.session_state.feature_vector.items() if val == 1]
     top_prob = st.session_state.top_prob
     rounds = st.session_state.question_rounds
     model = st.session_state.selected_model
